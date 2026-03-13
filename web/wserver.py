@@ -88,8 +88,8 @@ rawindexpage = '''
         </div>
         <h2 class="name">Qbittorrent Selection</h2>
         <div class="social">
-            <a href="https://t.me/honeyrs"><i class="fab fa-github"></i></a>
-            <a href="https://t.me/H_oneysingh"><i class="fab fa-telegram"></i></a>
+            <a href="https://t.me/Lord_Vasudev_Krishna"><i class="fab fa-github"></i></a>
+            <a href="https://t.me/Lord_Vasudev_Krishna"><i class="fab fa-telegram"></i></a>
         </div>
     </header>
     <!-- pin_entry -->

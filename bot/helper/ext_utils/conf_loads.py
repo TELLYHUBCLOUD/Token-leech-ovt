@@ -408,7 +408,7 @@ async def load_config():
 
     # ============================== UI ====================================
     AUTHOR_NAME = environ.get('AUTHOR_NAME', 'Searchx')
-    AUTHOR_URL = environ.get('AUTHOR_URL', 'https://t.me/h_oneysingh')
+    AUTHOR_URL = environ.get('AUTHOR_URL', 'https://t.me/Lord_Vasudev_Krishna')
     DRIVE_SEARCH_TITLE = environ.get('DRIVE_SEARCH_TITLE', 'Drive Search')
     GD_INFO = environ.get('GD_INFO', 'Uploaded by Telegram Honey Bot')
     PROG_FINISH = environ.get('PROG_FINISH', '⬢')
