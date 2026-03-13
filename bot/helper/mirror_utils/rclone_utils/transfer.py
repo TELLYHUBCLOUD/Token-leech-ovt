@@ -99,8 +99,10 @@ class RcloneTransferHelper:
             await self._listener.onDownloadComplete()
         elif return_code != -9:
             error = (await self._proc.stderr.read()).decode().strip()
-            if not error and using_sa:
-                error = 'Mostly your service accounts don\'t have acces to this drive!'
+            if not error:
+                error = 'Unknown error, check rlog.txt'
+                if using_sa:
+                    error += ' or mostly your service accounts don\'t have access to this drive!'
             LOGGER.error(error)
             if self._sa_number != 0 and 'RATE_LIMIT_EXCEEDED' in error and using_sa:
                 if self._sa_count < self._sa_number:
@@ -110,10 +112,7 @@ class RcloneTransferHelper:
                         return
                     return await self._start_download(cmd, remote_type, using_sa)
                 LOGGER.info('Reached maximum number of service accounts switching, which is %s', self._sa_count)
-            if error:
-                await self._listener.onDownloadError(error)
-                return
-            await self._listener.onDownloadComplete()
+            await self._listener.onDownloadError(error)
 
     async def download(self, remote, config_path, path):
         self._is_download = True
@@ -170,8 +169,10 @@ class RcloneTransferHelper:
             return False
         if return_code != 0:
             error = (await self._proc.stderr.read()).decode().strip()
-            if not error and using_sa:
-                error = 'Mostly your service accounts don\'t have acces to this drive!'
+            if not error:
+                error = 'Unknown error, check rlog.txt'
+                if using_sa:
+                    error += ' or mostly your service accounts don\'t have access to this drive!'
             LOGGER.error(error)
             if self._sa_number != 0 and 'RATE_LIMIT_EXCEEDED' in error and using_sa:
                 if self._sa_count < self._sa_number:
@@ -179,9 +180,8 @@ class RcloneTransferHelper:
                     cmd[7] = f'{remote}:{cmd[7].split(":", 1)[1]}'
                     return False if self._is_cancelled else await self._start_upload(cmd, remote_type, using_sa)
                 LOGGER.info('Reached maximum number of service accounts switching, which is %s', self._sa_count)
-            if error:
-                await self._listener.onUploadError(error)
-                return False
+            await self._listener.onUploadError(error)
+            return False
         return True
 
     async def upload(self, path, size):
@@ -324,7 +324,7 @@ class RcloneTransferHelper:
         cmd.append(source)
         cmd.extend(destination) if isinstance(destination, list) else cmd.append(destination)
         cmd.extend(('--transfers', str(config_dict['RCLONE_TFSIMULATION']), '--exclude', ext, '--retries-sleep', '3s',
-                    '--ignore-case', '--low-level-retries', '1', '-M', '--log-file', 'rlog.txt', '--log-level', 'DEBUG'))
+                    '--ignore-case', '--low-level-retries', '10', '-M', '--log-file', 'rlog.txt', '--log-level', 'DEBUG'))
         if rcflags := self._listener.rcFlags or config_dict['RCLONE_FLAGS']:
             rcflags = rcflags.split('|')
             for flag in rcflags:

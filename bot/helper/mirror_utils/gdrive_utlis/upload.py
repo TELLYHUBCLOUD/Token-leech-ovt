@@ -98,9 +98,12 @@ class gdUpload(GoogleDriveHelper):
             elif not item.lower().endswith(tuple(self.listener.extensionFilter)):
                 mime_type = get_mime_type(current_file_name)
                 file_name = current_file_name.split('/')[-1]
-                self._upload_file(current_file_name, file_name, mime_type, dest_id)
-                self.total_files += 1
-                new_id = dest_id
+                try:
+                    self._upload_file(current_file_name, file_name, mime_type, dest_id)
+                    self.total_files += 1
+                    new_id = dest_id
+                except Exception as err:
+                    LOGGER.error('Failed to upload %s: %s', current_file_name, err)
             else:
                 if not self.listener.seed or self.listener.newDir:
                     async_to_sync(clean_target, current_file_name)
