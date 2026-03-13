@@ -125,7 +125,9 @@ def action(message: Message):
 
 
 def get_readable_message(sid: int, is_user: bool, page_no: int=1, status : str='All', page_step: int=1):
-    msg = f'<a href="https://t.me/Animes_India_bot"><b><i>Animes India bot</b></i></a>\n'
+    msg = f'┌──────────────────┐\n'
+    msg += f'     ◈ <a href="https://t.me/SECRECT_BOT_UPDATES"><b>ＳＹＳＴＥＭ  ＴＲＡＮＳＦＥＲ</b></a> ◈\n'
+    msg += f'└──────────────────┘\n\n'
     dl_speed = up_speed = 0
 
     if status == 'All':
@@ -145,44 +147,43 @@ def get_readable_message(sid: int, is_user: bool, page_no: int=1, status : str='
     start_position = (page_no - 1) * STATUS_LIMIT
     for index, task in enumerate(tasks[start_position:STATUS_LIMIT + start_position], start=1):
         tstatus = task.status()
-        msg += f'<b>{index+start_position}.</b> <code>{escape(str(task.name())) or "N/A"}</code>'
-        if task.listener.isSuperChat:
-            reply_to = task.listener.message.reply_to_message
-            link = task.listener.message.link if not reply_to or getattr(reply_to.from_user, 'is_bot', None) else reply_to.link
-            msg += f'\n<b><a href="{link}"><i>{tstatus}...</i></a></b>'
-        else:
-            msg += f'\n<b><i>{tstatus}...</i></b>'
-        ext_msg = (f'\n<b>Engine:<i> {task.engine()}</i></b>'
-                   f'\n<b>By:</b> <a href="https://t.me/{task.listener.message.from_user.username}">{task.listener.message.from_user.first_name}</a>' if task.listener.isSuperChat else ''
-                   f'\n<b>Action:</b> {action(task.listener.message)}')
+        msg += f'  ➥  <b>𝗢𝗯𝗷𝗲𝗰𝘁</b>   ﹕ <code>{escape(str(task.name())) or "N/A"}</code>\n'
+
         if tstatus not in [MirrorStatus.STATUS_SEEDING, MirrorStatus.STATUS_METADATA, MirrorStatus.STATUS_SUBSYNC]:
-            msg += (f'\n<b>{get_progress_bar_string(task.progress())}</b>'
-                    f'\n<b>Progress:</b> {task.progress()}')
+            msg += f'\n  ⌽  <b>𝗣𝗿𝗼𝗴𝗿𝗲𝘀𝘀 ﹕</b> {task.progress()}           ⌽\n'
+            msg += f'  ┕─ [ {get_progress_bar_string(task.progress())} ] ─┙\n'
+            msg += f'  ⊶  <b>ꜱᴛᴀᴛᴜꜱ</b>    ﹕ {tstatus}\n'
             if tstatus == MirrorStatus.STATUS_SPLITTING and task.listener.isLeech:
-                msg += f'\n<b>Split Size:</b> {get_readable_file_size(task.listener.splitSize)}'
-            msg += (f'\n<b>Processed:</b> {task.processed_bytes()}'
-                    f'\n<b>Total Size:</b> {task.size()}'
-                    f'\n<b>Speed:</b> {task.speed()}'
-                    f'\n<b>ETA:</b> {task.eta() or "~"}'
-                    f'\n<b>Elapsed: </b>{task.elapsed() or "~"}')
+                msg += f'  ⊶  <b>ꜱᴘʟɪᴛ</b>    ﹕ {get_readable_file_size(task.listener.splitSize)}\n'
+            msg += f'  ⊶  <b>ᴅᴀᴛᴀ</b>      ﹕ {task.processed_bytes()} / {task.size()} (⏳ {task.eta() or "~"})\n'
+            msg += f'  ⊶  <b>ᴠᴇʟᴏᴄɪᴛʏ</b>  ﹕ {task.speed()}\n'
+            msg += f'  ⊶  <b>ᴍᴏᴅᴇ</b>      ﹕ PyroMulti v2.2.11\n'
             if tstatus == MirrorStatus.STATUS_WAIT:
-                msg += f'\n<b>Timeout: </b>{task.timeout()}'
+                msg += f'  ⊶  <b>ᴛɪᴍᴇᴏᴜᴛ</b>   ﹕ {task.timeout()}\n'
             if hasattr(task, 'seeders_num'):
                 try:
-                    msg += f'\n<b>S/L:</b> {task.seeders_num()}/{task.leechers_num()}'
+                    msg += f'  ⊶  <b>ꜱ/ʟ</b>       ﹕ {task.seeders_num()}/{task.leechers_num()}\n'
                 except:
                     pass
         elif tstatus == MirrorStatus.STATUS_SEEDING:
-            msg += (f'\n<b>Size:</b> {task.size()}'
-                    f'\n<b>Speed:</b> {task.upload_speed()}'
-                    f'\n<b>Uploaded:</b> {task.uploaded_bytes()}'
-                    f'\n<b>Ratio:</b> {task.ratio()}'
-                    f'\n<b>Time:</b> {task.seeding_time()}'
-                    f'\n<b>S/L:</b> {task.seeders_num()}/{task.leechers_num()}')
+            msg += f'\n  ⌽  <b>𝗣𝗿𝗼𝗴𝗿𝗲𝘀𝘀 ﹕</b> Seeding           ⌽\n'
+            msg += f'  ⊶  <b>ꜱᴛᴀᴛᴜꜱ</b>    ﹕ {tstatus}\n'
+            msg += f'  ⊶  <b>ᴅᴀᴛᴀ</b>      ﹕ {task.uploaded_bytes()} / {task.size()} (⏳ {task.seeding_time()})\n'
+            msg += f'  ⊶  <b>ᴠᴇʟᴏᴄɪᴛʏ</b>  ﹕ {task.upload_speed()}\n'
+            msg += f'  ⊶  <b>ᴍᴏᴅᴇ</b>      ﹕ PyroMulti v2.2.11\n'
+            msg += f'  ⊶  <b>ʀᴀᴛɪᴏ</b>     ﹕ {task.ratio()}\n'
+            msg += f'  ⊶  <b>ꜱ/ʟ</b>       ﹕ {task.seeders_num()}/{task.leechers_num()}\n'
         else:
-            msg += (f'\n<b>Size:</b> {task.size()}'
-                    f'\n<b>Elapsed:</b> {task.elapsed() or "~"}')
-        msg += f'{ext_msg}\n<code>/{BotCommands.CancelTaskCommand} {task.gid()}</code>\n\n'
+            msg += f'\n  ⌽  <b>𝗣𝗿𝗼𝗴𝗿𝗲𝘀𝘀 ﹕</b> {tstatus}           ⌽\n'
+            msg += f'  ⊶  <b>ꜱᴛᴀᴛᴜꜱ</b>    ﹕ {tstatus}\n'
+            msg += f'  ⊶  <b>ᴅᴀᴛᴀ</b>      ﹕ {task.size()}\n'
+            msg += f'  ⊶  <b>ᴇʟᴀᴘꜱᴇᴅ</b>   ﹕ {task.elapsed() or "~"}\n'
+            msg += f'  ⊶  <b>ᴍᴏᴅᴇ</b>      ﹕ PyroMulti v2.2.11\n'
+
+        user_name = f'<a href="https://t.me/{task.listener.message.from_user.username}">{task.listener.message.from_user.first_name}</a>' if task.listener.message.from_user.username else task.listener.message.from_user.first_name
+        msg += f'╼─────────────────────────────────────╾\n'
+        msg += f'  👤  <b>𝗜𝗱𝗲𝗻𝘁𝗶𝘁𝘆 ﹕</b> {user_name} | ID: {task.listener.message.from_user.id} ⊘ <b>𝗔𝗰𝘁𝗶𝗼𝗻 ﹕</b> /{BotCommands.CancelTaskCommand} {task.gid()}\n'
+        msg += f'╼─────────────────────────────────────╾\n\n'
 
     if not msg:
         if status == 'All':
@@ -216,8 +217,7 @@ def get_readable_message(sid: int, is_user: bool, page_no: int=1, status : str='
     buttons.button_data('🍑', f'status {sid} ref', 'header')
     if is_user:
         buttons.button_data('✘', f'status {sid} cls', 'header')
-    msg += ('▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n'
-            f'<b>CPU:</b> {cpu_percent()}% <b>| RAM:</b> {virtual_memory().percent}% <b>| FREE:</b> {get_readable_file_size(disk_usage(config_dict["DOWNLOAD_DIR"]).free)}\n'
-            f'<b>IN:</b> {get_readable_file_size(net_io_counters().bytes_recv)}<b> | OUT:</b> {get_readable_file_size(net_io_counters().bytes_sent)}\n'
-            f'<b>DL:</b> {get_readable_file_size(dl_speed)}/s<b> | UL:</b> {get_readable_file_size(up_speed)}/s <b>|</b> {get_readable_time(time() - botStartTime)}')
+    msg += (f'  ≡  <b>𝗦𝗧𝗔𝗧𝗦﹕</b>≡ <b>𝗦𝗬𝗦﹕</b>𝖢: {cpu_percent()}% | 𝖥: {get_readable_file_size(disk_usage(config_dict["DOWNLOAD_DIR"]).free)} 𝖱: {virtual_memory().percent}%\n'
+            f'| 𝖴𝗉: {get_readable_time(time() - botStartTime)}\n'
+            f'  ≡  <b>𝗡𝗘𝗧   ﹕</b> ↓ {get_readable_file_size(dl_speed)}/s | ↑ {get_readable_file_size(up_speed)}/s ╼────────────────────────────────────╾')
     return msg, buttons.build_menu(6)
