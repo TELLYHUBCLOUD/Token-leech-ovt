@@ -571,12 +571,51 @@ async def event_handler(client: Client, query: CallbackQuery, pfunc: partial, ph
 
 
 @new_task
-async def user_settings(_, message: Message):
+async def user_settings(client, message: Message):
     from_user = message.from_user
     handler_dict[from_user.id] = False
     if fmsg := await UseCheck(message).run():
         await auto_delete_message(message, fmsg)
         return
+
+    text = message.text or message.caption or ""
+    args = text.split()
+    if "-s" in args and "thumb" in args:
+        user_id = from_user.id
+        photo = None
+        if message.reply_to_message and message.reply_to_message.photo:
+            photo = message.reply_to_message.photo
+        elif message.photo:
+            photo = message.photo
+        elif message.reply_to_message and message.reply_to_message.document and message.reply_to_message.document.mime_type.startswith('image/'):
+            photo = message.reply_to_message.document
+        elif message.document and message.document.mime_type.startswith('image/'):
+            photo = message.document
+
+        if not photo:
+            await sendMessage("No photo found! Reply to a photo or send a photo with `-s thumb`.", message)
+            return
+
+        path = ospath.join('thumbnails', f'{user_id}.jpg')
+        await makedirs('thumbnails', exist_ok=True)
+        dl_msg = await sendMessage("Downloading thumbnail...", message)
+
+        if hasattr(photo, 'file_id'):
+            await client.download_media(message=photo.file_id, file_name=path)
+        else:
+            if getattr(message, 'reply_to_message', None):
+                await client.download_media(message=message.reply_to_message, file_name=path)
+            else:
+                await client.download_media(message=message, file_name=path)
+
+        if user_id not in user_data:
+            user_data[user_id] = {}
+        user_data[user_id]['thumb'] = path
+        if config_dict['DATABASE_URL']:
+            await database.update_user_doc(user_id, 'thumb', path)
+
+        await dl_msg.edit("✅ Custom Thumbnail saved successfully!")
+
     msg, image, buttons = await get_user_settings(from_user, None, None)
     if await aiopath.exists(thumb := ospath.join('thumbnails', f'{message.from_user.id}.jpg')):
         image = thumb
