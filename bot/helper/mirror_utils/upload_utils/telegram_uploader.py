@@ -248,6 +248,7 @@ class TgUploader:
         except FloodWait as f:
             LOGGER.warning(f, exc_info=True)
             await sleep(f.value * 1.2)
+            return await self._upload_file(caption, file, force_document)
         except Exception as err:
             if not self._thumb and thumb:
                 await clean_target(thumb)
