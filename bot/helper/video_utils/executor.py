@@ -502,7 +502,7 @@ class VidEcxecutor(FFProgress):
             wmsize, wmposition, popupwm = kwargs.get('wmsize'), kwargs.get('wmposition'), kwargs.get('popupwm') or ''
             if popupwm:
                 duration = (await get_media_info(self.path))[0]
-                popupwm = f':enable=lt(mod(t\,{duration}/{popupwm})\,20)'
+                popupwm = rf':enable=lt(mod(t\,{duration}/{popupwm})\,20)'
 
             hardusb, subfile = kwargs.get('hardsub') or '', kwargs.get('subfile', '')
             if hardusb and await aiopath.exists(subfile):

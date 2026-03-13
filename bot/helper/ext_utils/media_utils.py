@@ -449,7 +449,7 @@ class GenSS:
         await makedirs(self._ss_path, exist_ok=True)
         des_dir = ospath.join(self._ss_path, f'{index}.jpg')
         cmds = [FFMPEG_NAME, '-hide_banner', '-loglevel', 'error', '-start_at_zero', '-copyts', '-ss', f'{duration}', '-i', self._path, '-vf',
-                "drawtext=fontfile=font.ttf:fontsize=70:fontcolor=white:box=1:boxcolor=black@0.7:x=(W-tw)/1.05:y=h-(2*lh):text='%{pts\:hms}'",
+                r"drawtext=fontfile=font.ttf:fontsize=70:fontcolor=white:box=1:boxcolor=black@0.7:x=(W-tw)/1.05:y=h-(2*lh):text='%{pts\:hms}'",
                 '-vframes', '1', des_dir, '-y']
         await cmd_exec(cmds)
         if await aiopath.exists(des_dir):

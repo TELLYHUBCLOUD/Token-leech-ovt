@@ -51,7 +51,7 @@ if DATABASE_URL := environ.get('DATABASE_URL', ''):
         log_error('Database ERROR: %s', e)
 
 if environ.get('UPDATE_EVERYTHING', 'False').lower() == 'true':
-    srun("pip3 list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1 | xargs -n1 pip3 install -U", shell=True)
+    srun(r"pip3 list --outdated --format=freeze | grep -v '^\-e' | cut -d = -f 1 | xargs -n1 pip3 install -U", shell=True)
 
 if (UPSTREAM_REPO := environ.get('UPSTREAM_REPO')) and (UPSTREAM_BRANCH := environ.get('UPSTREAM_BRANCH')):
     if 'gist.githubusercontent.com' in UPSTREAM_REPO:

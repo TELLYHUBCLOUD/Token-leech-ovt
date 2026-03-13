@@ -469,7 +469,7 @@ def gofile(url: str):
             raise DirectDownloadLinkException(f"ERROR: {e.__class__.__name__}")
         if _json["status"] in "error-passwordRequired":
             raise DirectDownloadLinkException(
-                f"ERROR:\n{PASSWORD_ERROR_MESSAGE.format(url)}"
+                f"ERROR:\n{HelpString.PASSWORD_ERROR_MESSAGE.format(url)}"
             )
         if _json["status"] in "error-passwordWrong":
             raise DirectDownloadLinkException("ERROR: This password is wrong !")
@@ -746,7 +746,7 @@ def pcloud(url: str):
         except Exception as e:
             raise DirectDownloadLinkException(f'ERROR: {e}') from e
     if link := re_findall(r'.downloadlink.:..(https:.*)..', res.text):
-        return link[0].replace('\/', '/')
+        return link[0].replace(r'\/', '/')
     raise DirectDownloadLinkException('ERROR: Direct link not found!')
 
 
