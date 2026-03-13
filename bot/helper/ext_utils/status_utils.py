@@ -110,13 +110,10 @@ def speed_string_to_bytes(size_text: str):
 def get_progress_bar_string(pct: str):
     pct = float(pct.strip('%'))
     p = min(max(pct, 0), 100)
-    cFull = int(p // 8)
-    cPart = int(p % 8 - 1)
-    p_str = '■' * cFull
-    if cPart >= 0:
-        p_str += ['▤', '▥', '▦', '▧', '▨', '▩', '■'][cPart]
-    p_str += '□' * (12 - cFull)
-    return f"[{p_str}]"
+    cFull = int(p // 10)
+    p_str = '▰' * cFull
+    p_str += '▱' * (10 - cFull)
+    return f"[ {p_str} ]"
 
 
 def action(message: Message):
@@ -151,7 +148,7 @@ def get_readable_message(sid: int, is_user: bool, page_no: int=1, status : str='
 
         if tstatus not in [MirrorStatus.STATUS_SEEDING, MirrorStatus.STATUS_METADATA, MirrorStatus.STATUS_SUBSYNC]:
             msg += f'\n  ⌽  <b>𝗣𝗿𝗼𝗴𝗿𝗲𝘀𝘀 ﹕</b> {task.progress()}           ⌽\n'
-            msg += f'  ┕─ [ {get_progress_bar_string(task.progress())} ] ─┙\n'
+            msg += f'  ┕─ {get_progress_bar_string(task.progress())} ─┙\n'
             msg += f'  ⊶  <b>ꜱᴛᴀᴛᴜꜱ</b>    ﹕ {tstatus}\n'
             if tstatus == MirrorStatus.STATUS_SPLITTING and task.listener.isLeech:
                 msg += f'  ⊶  <b>ꜱᴘʟɪᴛ</b>    ﹕ {get_readable_file_size(task.listener.splitSize)}\n'
