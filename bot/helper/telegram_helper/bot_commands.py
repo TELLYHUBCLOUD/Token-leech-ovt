@@ -40,14 +40,14 @@ class _BotCommands:
         self.HashCommand = f'hash{CMD_SUFFIX}'
         self.BypassCommand = f'bypass{CMD_SUFFIX}'
         self.MiscCommand = f'misc{CMD_SUFFIX}'
-        self.UserSetCommand = f'uset{CMD_SUFFIX}'
+        self.UserSetCommand = [f'uset{CMD_SUFFIX}', f'us{CMD_SUFFIX}']
         self.SleepCommand = f'sleep{CMD_SUFFIX}'
         self.BtSelectCommand = f'btsel{CMD_SUFFIX}'
         self.ScrapperCommand = f'scrap{CMD_SUFFIX}'
         self.PurgeCommand = f'purg{CMD_SUFFIX}'
         self.InfoCommand = f'info{CMD_SUFFIX}'
         self.BroadcaseCommand = f'bc{CMD_SUFFIX}'
-        self.BotSetCommand = f'bset{CMD_SUFFIX}'
+        self.BotSetCommand = [f'bset{CMD_SUFFIX}', f'bs{CMD_SUFFIX}']
         self.UserSetPremiCommand = f'premi{CMD_SUFFIX}'
         self.DailyResetCommand = f'rdaily{CMD_SUFFIX}'
         self.RssCommand = f'rss{CMD_SUFFIX}'
