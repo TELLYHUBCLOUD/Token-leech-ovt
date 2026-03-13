@@ -126,7 +126,7 @@ def action(message: Message):
 
 def get_readable_message(sid: int, is_user: bool, page_no: int=1, status : str='All', page_step: int=1):
     msg = f'┌──────────────────┐\n'
-    msg += f'     ◈ <a href="https://t.me/SECRECT_BOT_UPDATES"><b>ＳＹＳＴＥＭ  ＴＲＡＮＳＦＥＲ</b></a> ◈\n'
+    msg += f'     ◈ <a href="https://t.me/SECRECT_BOT_UPDATES"><b>Sᴇᴄʀᴇᴄᴛ 𝐁ᴏᴛ 𝐔ᴘᴅᴀᴛᴇs</b></a> ◈\n'
     msg += f'└──────────────────┘\n\n'
     dl_speed = up_speed = 0
 
