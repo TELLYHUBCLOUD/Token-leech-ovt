@@ -632,5 +632,6 @@ async def bot_settings(_, message: Message):
     await sendingMessage(msg, message, image, buttons)
 
 
-bot.add_handler(MessageHandler(bot_settings, filters=command(BotCommands.BotSetCommand) & CustomFilters.sudo))
+from bot import CMD_SUFFIX
+bot.add_handler(MessageHandler(bot_settings, filters=command([BotCommands.BotSetCommand, f'bs{CMD_SUFFIX}']) & CustomFilters.sudo))
 bot.add_handler(CallbackQueryHandler(edit_bot_settings, filters=regex('^botset') & CustomFilters.sudo))

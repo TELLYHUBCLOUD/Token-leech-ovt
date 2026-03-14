@@ -614,7 +614,7 @@ async def user_settings(client, message: Message):
         if config_dict['DATABASE_URL']:
             await database.update_user_doc(user_id, 'thumb', path)
 
-        await dl_msg.edit("✅ Custom Thumbnail saved successfully!")
+        await editMessage("✅ Custom Thumbnail saved successfully!", dl_msg)
 
     msg, image, buttons = await get_user_settings(from_user, None, None)
     if await aiopath.exists(thumb := ospath.join('thumbnails', f'{message.from_user.id}.jpg')):
@@ -763,8 +763,9 @@ async def users_handler(_, query: CallbackQuery, event=Event, tele=TeleContent):
         await gather(query.answer(), editMessage(text, message, buttons))
 
 
+from bot import CMD_SUFFIX
 bot.add_handler(MessageHandler(set_premium_users, filters=command(BotCommands.UserSetPremiCommand) & CustomFilters.sudo))
 bot.add_handler(MessageHandler(send_users_settings, filters=command(BotCommands.UsersCommand) & CustomFilters.sudo))
 bot.add_handler(MessageHandler(reset_daily_limit, filters=command(BotCommands.DailyResetCommand) & CustomFilters.sudo))
-bot.add_handler(MessageHandler(user_settings, filters=command(BotCommands.UserSetCommand)))
+bot.add_handler(MessageHandler(user_settings, filters=command([BotCommands.UserSetCommand, f'us{CMD_SUFFIX}'])))
 bot.add_handler(CallbackQueryHandler(edit_user_settings, filters=regex('^userset')))

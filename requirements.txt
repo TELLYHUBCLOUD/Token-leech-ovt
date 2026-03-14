@@ -42,3 +42,4 @@ yt-dlp[default,curl-cffi]
 heroku3
 pytz
 gtts
+selenium

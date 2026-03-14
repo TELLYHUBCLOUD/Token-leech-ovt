@@ -19,6 +19,7 @@ from bot.helper.ext_utils.bot_utils import getSizeBytes
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 from bot.helper.ext_utils.help_messages import HelpString
 from bot.helper.ext_utils.links_utils import is_sharer_link, is_gdrive_link
+from bot.helper.mirror_utils.download_utils.rareanimes import rareanimes_bypass
 from bot.helper.ext_utils.status_utils import get_readable_time, speed_string_to_bytes
 
 
@@ -46,7 +47,7 @@ class siteList:
 
     @property
     def all(self):
-        return natsorted(self.DOOD + self.HOSTER + self.LIION_WISH + self.TERA + self.GSHARER + self.FEMBED + self.STAPE)
+        return natsorted(self.DOOD + self.HOSTER + self.LIION_WISH + self.TERA + self.GSHARER + self.FEMBED + self.STAPE + ['rareanimes.app', 'swift.multiquality.click'])
 
 
 sites = siteList()
@@ -103,6 +104,8 @@ def direct_link_generator(link: str):
         return shrdsk(link)
     if 'solidfiles.com' in domain:
         return solidfiles(link)
+    if 'swift.multiquality.click' in domain or 'rareanimes.app' in domain:
+        return rareanimes_bypass(link)
     if any(x in domain for x in ['streamhub.ink', 'streamhub.to']):
         return streamhub(link)
     if 'streamvid.net' in domain:

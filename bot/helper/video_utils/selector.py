@@ -284,7 +284,7 @@ async def cb_vidtools(_, query: CallbackQuery, obj: SelectMode):
         await query.answer(f'{VID_MODE[data[1]]} has been disabled!', True)
         return
     await query.answer()
-    if data[1] == obj.mode:
+    if data[1] == obj.mode and data[1] not in ['vid_vid', 'vid_aud', 'vid_sub']:
         return
     match data[1]:
         case 'done':
@@ -332,8 +332,9 @@ async def cb_vidtools(_, query: CallbackQuery, obj: SelectMode):
             if value == 'rename':
                 obj.is_rename = True
             else:
+                if obj.mode != value:
+                    obj.extra_data.clear()
                 obj.mode = value
-                obj.extra_data.clear()
             if value in ['watermark', 'rename', 'trim', 'vid_vid', 'vid_aud', 'vid_sub']:
                 future = obj.message_event_handler(value)
                 await gather(obj.list_buttons(value), wrap_future(future))

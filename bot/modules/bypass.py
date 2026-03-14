@@ -123,6 +123,24 @@ class Bypass(TaskListener):
         buttons = ButtonMaker()
         buttons.button_link('Source Link', self.link)
 
+        # Add buttons for multi-quality bypasses
+        if 'swift.multiquality.click' in self.link or 'rareanimes.app' in self.link:
+            msg = msg.replace(f'\n{result}', '')
+            if isinstance(result, dict) and 'contents' in result:
+                contents = result['contents']
+            elif isinstance(result, str):
+                contents = [{'url': u} for u in result.split('\n')]
+            else:
+                contents = []
+            for res_item in contents:
+                url_str = res_item["url"]
+                # URL is in format "http://... (1080p)"
+                parts = url_str.rsplit(' ', 1)
+                if len(parts) == 2:
+                    buttons.button_link(parts[1].strip('()'), parts[0])
+                else:
+                    buttons.button_link('Download', url_str)
+
         if config_dict['ENABLE_IMAGE_MODE']:
             limit.caption(msg)
             if len(msg) - limit.total > 1024:
