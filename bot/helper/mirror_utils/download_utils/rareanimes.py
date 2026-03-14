@@ -17,6 +17,7 @@ def rareanimes_bypass(url: str) -> dict:
     options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--disable-gpu')
+    options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
 
     try:
         driver = webdriver.Chrome(options=options)
@@ -26,27 +27,22 @@ def rareanimes_bypass(url: str) -> dict:
         resolutions = ['360p', '480p', '720p', '1080p']
         found_links = {}
 
-        def extract_links():
-            links = driver.find_elements(By.TAG_NAME, "a")
-            for link in links:
-                text = link.text.lower()
-                href = link.get_attribute("href")
-                if href:
-                    for res in resolutions:
-                        if res in text and res not in found_links and "http" in href:
-                            found_links[res] = href
-
-        extract_links()
-
         iframes = driver.find_elements(By.TAG_NAME, "iframe")
         for i in range(len(iframes)):
-            try:
-                driver.switch_to.frame(i)
-                extract_links()
-                driver.switch_to.default_content()
-            except Exception:
-                driver.switch_to.default_content()
-                continue
+            src = iframes[i].get_attribute('src')
+            if src and ("razorshell" in src or "multiquality" in src):
+                downlead_url = src.replace("/embed/", "/downlead/")
+                driver.get(downlead_url)
+                time.sleep(5)
+                links = driver.find_elements(By.TAG_NAME, "a")
+                for link in links:
+                    text = link.text.lower()
+                    href = link.get_attribute("href")
+                    if href:
+                        for res in resolutions:
+                            if res in text and res not in found_links and "http" in href:
+                                found_links[res] = href
+                break
 
         driver.quit()
 
