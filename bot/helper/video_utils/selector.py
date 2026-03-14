@@ -227,9 +227,12 @@ async def message_handler(_, message: Message, obj: SelectMode, is_sub=False):
         obj.newname = message.text.strip().replace('/', '')
         obj.is_rename = False
     elif obj.mode in ('vid_vid', 'vid_aud', 'vid_sub') and (media := is_media(message)):
-        is_video = getattr(media, 'mime_type', '').startswith('video/') or getattr(media, 'file_name', '').lower().endswith(('.mp4', '.mkv', '.avi', '.webm'))
-        is_audio = getattr(media, 'mime_type', '').startswith('audio/') or getattr(media, 'file_name', '').lower().endswith(('.mp3', '.m4a', '.wav', '.flac'))
-        is_sub_file = getattr(media, 'file_name', '').lower().endswith(('.ass', '.srt', '.vtt'))
+        mime_type = getattr(media, 'mime_type', '') or ''
+        file_name = getattr(media, 'file_name', '') or ''
+
+        is_video = mime_type.startswith('video/') or file_name.lower().endswith(('.mp4', '.mkv', '.avi', '.webm'))
+        is_audio = mime_type.startswith('audio/') or file_name.lower().endswith(('.mp3', '.m4a', '.wav', '.flac'))
+        is_sub_file = file_name.lower().endswith(('.ass', '.srt', '.vtt'))
 
         valid = False
         if obj.mode == 'vid_vid' and is_video:

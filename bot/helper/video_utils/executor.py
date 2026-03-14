@@ -92,7 +92,7 @@ class VidEcxecutor(FFProgress):
                 case 'vid_vid':
                     return await self._merge_vids(**kwargs)
                 case 'vid_aud':
-                    return await self._merge_auds()
+                    return await self._merge_auds(**kwargs)
                 case 'vid_sub':
                     return await self._merge_subs(**kwargs)
                 case 'trim':
