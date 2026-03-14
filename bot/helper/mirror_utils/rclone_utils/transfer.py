@@ -12,6 +12,7 @@ from bot import config_dict, LOGGER
 from bot.helper.ext_utils.bot_utils import cmd_exec, sync_to_async
 from bot.helper.ext_utils.files_utils import get_mime_type, count_files_and_folders
 from bot.helper.listeners import tasks_listener as task
+from bot.helper.telegram_helper.message_utils import sendFile
 
 
 class RcloneTransferHelper:
@@ -103,6 +104,8 @@ class RcloneTransferHelper:
                 error = 'Unknown error, check rlog.txt'
                 if using_sa:
                     error += ' or mostly your service accounts don\'t have access to this drive!'
+                if await aiopath.exists('rlog.txt'):
+                    await sendFile(self._listener.message, 'rlog.txt', 'Rclone Log File')
             LOGGER.error(error)
             if self._sa_number != 0 and 'RATE_LIMIT_EXCEEDED' in error and using_sa:
                 if self._sa_count < self._sa_number:
@@ -173,6 +176,8 @@ class RcloneTransferHelper:
                 error = 'Unknown error, check rlog.txt'
                 if using_sa:
                     error += ' or mostly your service accounts don\'t have access to this drive!'
+                if await aiopath.exists('rlog.txt'):
+                    await sendFile(self._listener.message, 'rlog.txt', 'Rclone Log File')
             LOGGER.error(error)
             if self._sa_number != 0 and 'RATE_LIMIT_EXCEEDED' in error and using_sa:
                 if self._sa_count < self._sa_number:
