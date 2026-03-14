@@ -570,10 +570,10 @@ class VidEcxecutor(FFProgress):
 
         return await self._final_path()
 
-    async def _merge_auds(self):
+    async def _merge_auds(self, **kwargs):
         main_video = False
         for dirpath, _, files in await sync_to_async(walk, self.path):
-            if len(files) == 1:
+            if len(files) == 1 and not kwargs.get('vid_list'):
                 return self._up_path
             for file in natsorted(files):
                 file = ospath.join(dirpath, file)
@@ -586,9 +586,20 @@ class VidEcxecutor(FFProgress):
                     self.size += await get_path_size(file)
                     self._files.append(file)
 
+        # Add interactive audio/video files sent by user
+        if vid_list := kwargs.get('vid_list'):
+            for media_file in vid_list:
+                if await aiopath.exists(media_file):
+                    is_video, is_audio, _ = await get_document_type(media_file)
+                    if is_video and not main_video:
+                        main_video = media_file
+                    elif is_audio:
+                        self.size += await get_path_size(media_file)
+                        self._files.append(ospath.abspath(media_file))
+
         self._files.insert(0, main_video)
         self.outfile = self._up_path
-        if len(self._files) > 1:
+        if len(self._files) > 1 and main_video:
             _, size = await gather(self._name_base_dir(self.path), get_path_size(main_video))
             self.size += size
             await update_status_message(self.listener.message.chat.id)
@@ -612,7 +623,7 @@ class VidEcxecutor(FFProgress):
     async def _merge_subs(self, **kwargs):
         main_video = False
         for dirpath, _, files in await sync_to_async(walk, self.path):
-            if len(files) == 1:
+            if len(files) == 1 and not kwargs.get('vid_list'):
                 return self._up_path
             for file in natsorted(files):
                 file = ospath.join(dirpath, file)
@@ -625,9 +636,20 @@ class VidEcxecutor(FFProgress):
                     self.size += await get_path_size(file)
                     self._files.append(file)
 
+        # Add interactive sub/video files sent by user
+        if vid_list := kwargs.get('vid_list'):
+            for media_file in vid_list:
+                if await aiopath.exists(media_file):
+                    is_video, is_sub = (await get_document_type(media_file))[0], media_file.endswith(('.ass', '.srt', '.vtt'))
+                    if is_video and not main_video:
+                        main_video = media_file
+                    elif is_sub:
+                        self.size += await get_path_size(media_file)
+                        self._files.append(ospath.abspath(media_file))
+
         self._files.insert(0, main_video)
         self.outfile = self._up_path
-        if len(self._files) > 1:
+        if len(self._files) > 1 and main_video:
             _, size = await gather(self._name_base_dir(self.path), get_path_size(main_video))
             self.size += size
             cmd = [FFMPEG_NAME, '-hide_banner', '-ignore_unknown', '-y']
@@ -659,6 +681,14 @@ class VidEcxecutor(FFProgress):
                     cmd.extend(('-map', f'{j}:s'))
                 cmd.extend(('-c:v', 'copy', '-c:a', 'copy', '-c:s', 'srt', self.outfile))
             await self._run_cmd(cmd, status)
+
+            # Clean up user-sent media after merge
+            if vid_list := kwargs.get('vid_list'):
+                await gather(*[clean_target(v) for v in vid_list])
+                vid_dir = ospath.join('vid_vid', str(self.listener.mid))
+                if await aiopath.exists(vid_dir):
+                    await clean_target(vid_dir)
+
             if self.is_cancel:
                 return
 
