@@ -124,7 +124,7 @@ class Bypass(TaskListener):
         buttons.button_link('Source Link', self.link)
 
         # Add buttons for multi-quality bypasses
-        if 'swift.multiquality.click' in self.link or 'rareanimes.app' in self.link:
+        if any(x in self.link for x in ['swift.multiquality.click', 'rareanimes.app', 'codedew.com']):
             msg = msg.replace(f'\n{result}', '')
             if isinstance(result, dict) and 'contents' in result:
                 contents = result['contents']

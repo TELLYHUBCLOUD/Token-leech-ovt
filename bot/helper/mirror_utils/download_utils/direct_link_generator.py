@@ -47,7 +47,7 @@ class siteList:
 
     @property
     def all(self):
-        return natsorted(self.DOOD + self.HOSTER + self.LIION_WISH + self.TERA + self.GSHARER + self.FEMBED + self.STAPE + ['rareanimes.app', 'swift.multiquality.click'])
+        return natsorted(self.DOOD + self.HOSTER + self.LIION_WISH + self.TERA + self.GSHARER + self.FEMBED + self.STAPE + ['rareanimes.app', 'swift.multiquality.click', 'codedew.com'])
 
 
 sites = siteList()
@@ -104,7 +104,7 @@ def direct_link_generator(link: str):
         return shrdsk(link)
     if 'solidfiles.com' in domain:
         return solidfiles(link)
-    if 'swift.multiquality.click' in domain or 'rareanimes.app' in domain:
+    if any(x in domain for x in ['swift.multiquality.click', 'rareanimes.app', 'codedew.com']):
         return rareanimes_bypass(link)
     if any(x in domain for x in ['streamhub.ink', 'streamhub.to']):
         return streamhub(link)
