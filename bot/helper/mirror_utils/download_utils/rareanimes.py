@@ -1,9 +1,17 @@
 import time
-from selenium import webdriver
-from selenium.webdriver.common.by import By
+import subprocess
 from bot.helper.ext_utils.exceptions import DirectDownloadLinkException
 
 def rareanimes_bypass(url: str) -> dict:
+    try:
+        from selenium import webdriver
+        from selenium.webdriver.common.by import By
+    except ImportError:
+        import subprocess
+        subprocess.run(["pip3", "install", "selenium"], check=True)
+        from selenium import webdriver
+        from selenium.webdriver.common.by import By
+
     options = webdriver.ChromeOptions()
     options.add_argument('--headless=new')
     options.add_argument('--no-sandbox')
