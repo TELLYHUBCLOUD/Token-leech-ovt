@@ -71,7 +71,8 @@ class SelectMode():
         msg = ('<b>VIDEOS TOOL SETTINGS</b>'
                f'\nMode: <b>{vidmode}</b>' if (vidmode := VID_MODE.get(self.mode)) else ''
                f'\nName: <b>{self.newname or "Default"}</b>'
-               f'\nTrim Duration: <b>{list(self.extra_data.values())}</b>' if self.extra_data and self.mode == 'trim' else '')
+               f'\nTrim Duration: <b>{list(self.extra_data.values())}</b>' if self.extra_data and self.mode == 'trim' else ''
+               f'\nVideos added: <b>{len(self.extra_data.get("vid_list", []))}</b>' if self.extra_data and self.mode == 'vid_vid' else '')
         if self.mode in ('vid_sub', 'watermark'):
             hardsub = self.extra_data.get('hardsub')
             msg += f"\nHardsub Mode: <b>{'Enable' if hardsub else 'Disable'}</b>"
@@ -114,6 +115,8 @@ class SelectMode():
                         '480p: <b>11-16</b>')
             case 'trim':
                 msg += '\n\n<i>Send valid trim duration <b>hh:mm:ss hh:mm:ss</b></i>'
+            case 'vid_vid':
+                msg += '\n\n<i>Send video(s) to merge. Send one by one.</i>'
         msg += f'\n\n<i>Time Out: {get_readable_time(180 - (time()-self._time))}</i>'
         return msg
 
@@ -192,6 +195,9 @@ class SelectMode():
                     buttons.button_data('Top Right', 'vidtool wmposition main_w-overlay_w-5:5')
                     buttons.button_data('Bottom Left', 'vidtool wmposition 5:main_h-overlay_h')
                     buttons.button_data('Bottom Right', 'vidtool wmposition w-overlay_w-5:main_h-overlay_h-5')
+                case 'vid_vid':
+                    buttons.button_data('Done', 'vidtool done')
+                    buttons.button_data('<<', 'vidtool back', 'footer')
                 case _:
                     buttons.button_data('<<', 'vidtool back', 'footer')
 
@@ -212,6 +218,18 @@ async def message_handler(_, message: Message, obj: SelectMode, is_sub=False):
     if obj.is_rename and message.text:
         obj.newname = message.text.strip().replace('/', '')
         obj.is_rename = False
+    elif obj.mode == 'vid_vid' and (media := is_media(message)):
+        if getattr(media, 'mime_type', '').startswith('video/') or getattr(media, 'file_name', '').lower().endswith(('.mp4', '.mkv', '.avi', '.webm')):
+            vid_dir = ospath.join('vid_vid', str(obj.listener.mid))
+            await makedirs(vid_dir, exist_ok=True)
+            fpath = await message.download(ospath.join(vid_dir, media.file_name or f"{time()}.mp4"))
+            if 'vid_list' not in obj.extra_data:
+                obj.extra_data['vid_list'] = []
+            obj.extra_data['vid_list'].append(fpath)
+            data = 'vid_vid'
+        else:
+            await sendMessage('Only video files allowed!', message)
+            return
     elif obj.mode == 'watermark' and (media := is_media(message)):
         if is_sub:
             if message.document and not media.file_name.lower().endswith(('.ass', '.srt')):
@@ -293,7 +311,7 @@ async def cb_vidtools(_, query: CallbackQuery, obj: SelectMode):
             else:
                 obj.mode = value
                 obj.extra_data.clear()
-            if value in ['watermark', 'rename', 'trim']:
+            if value in ['watermark', 'rename', 'trim', 'vid_vid']:
                 future = obj.message_event_handler(value)
                 await gather(obj.list_buttons(value), wrap_future(future))
                 return

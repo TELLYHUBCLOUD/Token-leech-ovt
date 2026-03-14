@@ -90,7 +90,7 @@ class VidEcxecutor(FFProgress):
         try:
             match self.mode:
                 case 'vid_vid':
-                    return await self._merge_vids()
+                    return await self._merge_vids(**kwargs)
                 case 'vid_aud':
                     return await self._merge_auds()
                 case 'vid_sub':
@@ -525,16 +525,24 @@ class VidEcxecutor(FFProgress):
 
         return await self._final_path()
 
-    async def _merge_vids(self):
+    async def _merge_vids(self, **kwargs):
         list_files = []
         for dirpath, _, files in await sync_to_async(walk, self.path):
-            if len(files) == 1:
+            if len(files) == 1 and not kwargs.get('vid_list'):
                 return self._up_path
             for file in natsorted(files):
                 video_file = ospath.join(dirpath, file)
                 if (await get_document_type(video_file))[0]:
                     self.size += await get_path_size(video_file)
                     list_files.append(f"file '{video_file}'")
+                    self._files.append(video_file)
+
+        # Add interactive videos sent by user
+        if vid_list := kwargs.get('vid_list'):
+            for video_file in vid_list:
+                if await aiopath.exists(video_file):
+                    self.size += await get_path_size(video_file)
+                    list_files.append(f"file '{ospath.abspath(video_file)}'")
                     self._files.append(video_file)
 
         self.outfile = self._up_path
@@ -549,6 +557,14 @@ class VidEcxecutor(FFProgress):
             cmd = [FFMPEG_NAME, '-ignore_unknown', '-f', 'concat', '-safe', '0', '-i', input_file, '-map', '0', '-c', 'copy', self.outfile, '-y']
             await self._run_cmd(cmd, 'direct')
             await clean_target(input_file)
+
+            # Clean up user-sent videos after merge
+            if vid_list:
+                await gather(*[clean_target(v) for v in vid_list])
+                vid_dir = ospath.join('vid_vid', str(self.listener.mid))
+                if await aiopath.exists(vid_dir):
+                    await clean_target(vid_dir)
+
             if self.is_cancel:
                 return
 
