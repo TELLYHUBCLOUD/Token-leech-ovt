@@ -115,8 +115,15 @@ class SelectMode():
                         '480p: <b>11-16</b>')
             case 'trim':
                 msg += '\n\n<i>Send valid trim duration <b>hh:mm:ss hh:mm:ss</b></i>'
-            case 'vid_vid' | 'vid_aud' | 'vid_sub':
-                msg += '\n\n<i>Send video/audio/subtitle(s) to merge. Send one by one.</i>'
+            case 'vid_vid':
+                msg += ('\n\n<i>Send video(s) to merge. Send one by one.</i>\n'
+                        '<b>Supported:</b> mp4, mkv, avi, webm')
+            case 'vid_aud':
+                msg += ('\n\n<i>Send audio(s) or video(s) to merge. Send one by one.</i>\n'
+                        '<b>Supported:</b> mp3, m4a, wav, flac, mp4, mkv, avi, webm')
+            case 'vid_sub':
+                msg += ('\n\n<i>Send subtitle(s) or video(s) to merge. Send one by one.</i>\n'
+                        '<b>Supported:</b> ass, srt, vtt, mp4, mkv, avi, webm')
         msg += f'\n\n<i>Time Out: {get_readable_time(180 - (time()-self._time))}</i>'
         return msg
 
@@ -196,6 +203,7 @@ class SelectMode():
                     buttons.button_data('Bottom Left', 'vidtool wmposition 5:main_h-overlay_h')
                     buttons.button_data('Bottom Right', 'vidtool wmposition w-overlay_w-5:main_h-overlay_h-5')
                 case 'vid_vid' | 'vid_aud' | 'vid_sub':
+                    buttons.button_data('Add More', f'vidtool {mode}')
                     buttons.button_data('Done', 'vidtool done')
                     buttons.button_data('<<', 'vidtool back', 'footer')
                 case _:
