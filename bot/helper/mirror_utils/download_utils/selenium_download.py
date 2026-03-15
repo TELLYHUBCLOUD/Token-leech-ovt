@@ -103,15 +103,21 @@ async def add_selenium_download(listener, path, url):
 
             extract_links()
 
-            iframes = driver.find_elements(By.TAG_NAME, "iframe")
-            for i in range(len(iframes)):
-                try:
-                    driver.switch_to.frame(i)
-                    extract_links()
-                    driver.switch_to.default_content()
-                except Exception:
-                    driver.switch_to.default_content()
-                    continue
+            if not found_links:
+                iframes = driver.find_elements(By.TAG_NAME, "iframe")
+                for i in range(len(iframes)):
+                    try:
+                        src = iframes[i].get_attribute('src')
+                        is_tgt = "razorshell" in src or "multiquality" in src
+                        if src and is_tgt:
+                            downlead_url = src.replace("/embed/", "/downlead/")
+                            driver.get(downlead_url)
+                            sleep(5)
+                            extract_links()
+                            if found_links:
+                                break
+                    except Exception:
+                        continue
 
             if not found_links:
                 raise Exception("No video links found to download.")
