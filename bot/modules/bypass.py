@@ -129,29 +129,7 @@ class Bypass(TaskListener):
         # If the generated direct link outputs multiple links, automatically download them
         if any(x in self.link for x in ['swift.multiquality.click', 'rareanimes.app', 'codedew.com']):
             await deleteMessage(self.editable)
-            if isinstance(original_result, dict) and 'contents' in original_result:
-                contents = original_result['contents']
-            else:
-                contents = [{'url': original_result}] if isinstance(original_result, str) else []
-
-            for res_item in contents:
-                url_str = res_item["url"]
-                parts = url_str.rsplit(' ', 1)
-                if len(parts) == 2:
-                    link_url = parts[0].strip()
-                else:
-                    link_url = url_str.strip()
-
-                if link_url.startswith('http'):
-                    headers = res_item.get('headers', '')
-                    msg_text = f"/leech {link_url}"
-                    if headers:
-                        msg_text += f" -h {headers}"
-
-                    mock_message = copy.copy(self.message)
-                    mock_message.text = msg_text
-
-                    Mirror(self.client, mock_message, isLeech=True).newEvent()
+            Mirror(self.client, self.message, isLeech=True).newEvent()
             return
 
         if config_dict['ENABLE_IMAGE_MODE']:

@@ -24,6 +24,7 @@ from bot.helper.mirror_utils.download_utils.gd_download import add_gd_download
 from bot.helper.mirror_utils.download_utils.jd_download import add_jd_download
 from bot.helper.mirror_utils.download_utils.qbit_download import add_qb_torrent
 from bot.helper.mirror_utils.download_utils.rclone_download import add_rclone_download
+from bot.helper.mirror_utils.download_utils.selenium_download import add_selenium_download
 from bot.helper.mirror_utils.download_utils.telegram_download import TelegramDownloadHelper
 from bot.helper.telegram_helper.bot_commands import BotCommands
 from bot.helper.telegram_helper.filters import CustomFilters
@@ -230,55 +231,50 @@ class Mirror(TaskListener):
         if (not self.isJd and not self.isQbit and not is_magnet(self.link) and not is_rclone_path(self.link) and
             not is_gdrive_link(self.link) and not self.link.endswith('.torrent') and not is_gdrive_id(self.link) and not file_):
             self.isSharer = is_sharer_link(self.link)
-            content_type = (await get_content_type(self.link))[0]
-            if not content_type or re_match(r'text/html|text/plain', content_type):
-                host = urlparse(self.link).netloc
-                await editMessage(f'<i>Generating direct link from {host}, please wait...</i>', self.editable)
-                try:
-                    self.link = await sync_to_async(direct_link_generator, self.link)
-                    LOGGER.info('Generated link: %s', self.link)
-                    if isinstance(self.link, dict):
-                        contents = self.link.get('contents', [])
-                        if 'total_size' not in self.link and len(contents) > 1:
-                            await deleteMessage(self.editable)
-                            for res_item in contents:
-                                url_str = res_item["url"]
-                                parts = url_str.rsplit(' ', 1)
-                                link_url = parts[0].strip() if len(parts) == 2 else url_str.strip()
-                                if link_url.startswith('http'):
-                                    h_str = res_item.get('headers', '')
-                                    msg_text = f"/{'leech' if self.isLeech else 'mirror'} {link_url}"
-                                    if h_str:
-                                        msg_text += f" -h {h_str}"
-                                    mock_message = copy.copy(self.message)
-                                    mock_message.text = msg_text
-                                    Mirror(self.client, mock_message, self.isQbit, self.isJd, self.isLeech, self.vidMode, self.sameDir, self.bulk, self.multiTag, self.options).newEvent()
-                            self.removeFromSameDir()
-                            return
-                        elif 'total_size' not in self.link and len(contents) == 1:
-                            self.link = contents[0]["url"]
+
+            # Use Selenium downloader for bypass sites before attempting generator
+            if any(x in self.link for x in ['swift.multiquality.click', 'rareanimes.app', 'codedew.com']):
+                self.isSelenium = True
+                await deleteMessage(self.editable)
+            else:
+                self.isSelenium = False
+                content_type = (await get_content_type(self.link))[0]
+                if not content_type or re_match(r'text/html|text/plain', content_type):
+                    host = urlparse(self.link).netloc
+                    await editMessage(f'<i>Generating direct link from {host}, please wait...</i>', self.editable)
+                    try:
+                        self.link = await sync_to_async(direct_link_generator, self.link)
+                        LOGGER.info('Generated link: %s', self.link)
+                        if isinstance(self.link, dict):
+                            contents = self.link.get('contents', [])
+                            if 'total_size' not in self.link and len(contents) == 1:
+                                self.link = contents[0]["url"]
+                                msg = f'<i>Found direct link:</i>\n<code>{self.link}</code>'
+                            else:
+                                msg = '<i>Found folder ddl link...</i>'
+                        elif isinstance(self.link, tuple):
+                            if len(self.link) == 3:
+                                self.link, self.name, headers = self.link
+                            else:
+                                self.link, headers = self.link
                             msg = f'<i>Found direct link:</i>\n<code>{self.link}</code>'
                         else:
-                            msg = '<i>Found folder ddl link...</i>'
-                    elif isinstance(self.link, tuple):
-                        if len(self.link) == 3:
-                            self.link, self.name, headers = self.link
-                        else:
-                            self.link, headers = self.link
-                        msg = f'<i>Found direct link:</i>\n<code>{self.link}</code>'
-                    else:
-                        msg = f"<i>Found {'drive' if 'drive.google.com' in self.link else 'direct'} link:</i>\n<code>{self.link}</code>"
-                    await editMessage(msg, self.editable)
-                    await sleep(1)
-                except DirectDownloadLinkException as e:
-                    if str(e).startswith('ERROR:'):
-                        await editMessage(f'{self.tag}, {e}', self.editable)
-                        self.removeFromSameDir()
-                        return
-        if not self.isJd:
+                            msg = f"<i>Found {'drive' if 'drive.google.com' in self.link else 'direct'} link:</i>\n<code>{self.link}</code>"
+                        await editMessage(msg, self.editable)
+                        await sleep(1)
+                    except DirectDownloadLinkException as e:
+                        if str(e).startswith('ERROR:'):
+                            await editMessage(f'{self.tag}, {e}', self.editable)
+                            self.removeFromSameDir()
+                            return
+        else:
+            self.isSelenium = False
+        if not self.isJd and not self.isSelenium:
             await deleteMessage(self.editable)
 
-        if file_:
+        if getattr(self, 'isSelenium', False):
+            await add_selenium_download(self, path, self.link)
+        elif file_:
             await TelegramDownloadHelper(self).add_download(reply_to, path)
         elif isinstance(self.link, dict):
             await add_direct_download(self, path)
