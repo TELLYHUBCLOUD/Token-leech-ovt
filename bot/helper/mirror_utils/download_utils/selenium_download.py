@@ -1,14 +1,16 @@
 from os import path as ospath, listdir, makedirs
-from aiofiles.os import remove, path as aiopath
-from time import time
-from asyncio import sleep
+from time import time, sleep
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 import requests
 
-from bot import LOGGER, bot_loop, task_dict, task_dict_lock
+from bot import LOGGER, task_dict, task_dict_lock
 from bot.helper.ext_utils.bot_utils import sync_to_async
-from bot.helper.ext_utils.status_utils import get_readable_file_size, MirrorStatus, get_readable_time
+from bot.helper.ext_utils.status_utils import (
+    get_readable_file_size,
+    MirrorStatus,
+    get_readable_time,
+)
 
 
 class SeleniumDownloadStatus:
@@ -83,7 +85,7 @@ async def add_selenium_download(listener, path, url):
         try:
             LOGGER.info(f"Selenium opening URL: {url}")
             driver.get(url)
-            sleep(5) # wait for redirects
+            sleep(5)  # wait for redirects
 
             resolutions = ['360p', '480p', '720p', '1080p']
             found_links = {}
@@ -95,7 +97,8 @@ async def add_selenium_download(listener, path, url):
                     href = link.get_attribute("href")
                     if href:
                         for res in resolutions:
-                            if res in text and res not in found_links and "http" in href:
+                            valid = res in text and res not in found_links
+                            if valid and "http" in href:
                                 found_links[res] = href
 
             extract_links()
@@ -122,19 +125,24 @@ async def add_selenium_download(listener, path, url):
                     session = requests.Session()
                     for cookie in driver.get_cookies():
                         session.cookies.set(cookie['name'], cookie['value'])
-                    user_agent = driver.execute_script("return navigator.userAgent;")
-                    session.headers.update({"User-Agent": user_agent})
+                    ua = driver.execute_script("return navigator.userAgent;")
+                    session.headers.update({"User-Agent": ua})
 
-                    res_head = session.head(download_url, allow_redirects=True, timeout=10)
+                    res_head = session.head(
+                        download_url, allow_redirects=True, timeout=10
+                    )
                     if 'Content-Length' in res_head.headers:
                         total_size = int(res_head.headers['Content-Length'])
-                except:
+                except Exception:
                     pass
 
                 initial_files = set(listdir(path))
                 driver.get(download_url)
 
-                status = SeleniumDownloadStatus(f"Video_{res}.mp4", total_size, f"sel_{res}", listener)
+                st_name = f"Video_{res}.mp4"
+                status = SeleniumDownloadStatus(
+                    st_name, total_size, f"sel_{res}", listener
+                )
                 with task_dict_lock:
                     task_dict[listener.mid] = status
 
@@ -148,32 +156,35 @@ async def add_selenium_download(listener, path, url):
                     wait_time += 1
 
                     current_files = set(listdir(path))
-                    crdownloads = [f for f in current_files if f.endswith('.crdownload')]
+                    crd = [f for f in current_files if f.endswith('.crdow\
+nload')]
 
-                    if crdownloads:
-                        filepath = ospath.join(path, crdownloads[0])
+                    if crd:
+                        filepath = ospath.join(path, crd[0])
                         if ospath.exists(filepath):
                             current_size = ospath.getsize(filepath)
 
                             now = time()
                             time_diff = now - last_time
                             size_diff = current_size - last_size
-                            speed_bps = size_diff / time_diff if time_diff > 0 else 0
+                            spd = size_diff / time_diff if time_diff > 0 else 0
 
-                            status.set_progress(current_size, speed_bps)
-                            status._name = crdownloads[0].replace('.crdownload', '')
+                            status.set_progress(current_size, spd)
+                            status._name = crd[0].replace('.crdownload', '')
 
                             last_size = current_size
                             last_time = now
                             wait_time = 0
                     else:
-                        new_files = current_files - initial_files - set(crdownloads)
+                        new_files = current_files - initial_files - set(crd)
                         if new_files:
                             LOGGER.info(f"Selenium finished downloading {res}")
                             downloading = False
                         else:
                             if wait_time > 30:
-                                LOGGER.warning(f"Timeout waiting for {res} to start downloading.")
+                                warning_msg = f"Timeout waiting for {res} " \
+                                              f"to start downloading."
+                                LOGGER.warning(warning_msg)
                                 downloading = False
 
         finally:
