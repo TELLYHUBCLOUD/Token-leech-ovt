@@ -84,7 +84,7 @@ rawindexpage = '''
     <!--© Designed and coded by @H_oneysingh-Telegram-->
     <header>
         <div class="brand">
-            <img src="https://envs.sh/JlG.jpg" alt="logo" />
+            <img src="https://files.catbox.moe/58gf6k.jpg" alt="logo" />
         </div>
         <h2 class="name">Qbittorrent Selection</h2>
         <div class="social">

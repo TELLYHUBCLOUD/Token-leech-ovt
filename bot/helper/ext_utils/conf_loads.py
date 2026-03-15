@@ -55,54 +55,54 @@ default_values = {'AUTO_DELETE_MESSAGE_DURATION': 30,
                   'HARDSUB_FONT_NAME': 'Simple Day Mistu',
                   'HARDSUB_FONT_SIZE': '',
                   'DISABLE_MULTI_VIDTOOLS': 'compress rmstream extract trim watermark convert',
-                  'IMAGE_ARIA': 'https://envs.sh/Cb-.jpg',
-                  'IMAGE_AUTH': 'https://envs.sh/Cbx.jpg',
-                  'IMAGE_BOLD': 'https://envs.sh/Cby.jpg',
-                  'IMAGE_BYE': 'https://envs.sh/CbX.jpg',
-                  'IMAGE_CANCEL': 'https://envs.sh/CPu.jpg',
-                  'IMAGE_CAPTION': 'https://envs.sh/Cbl.jpg',
-                  'IMAGE_COMMONS_CHECK': 'https://envs.sh/CP2.jpg',
+                  'IMAGE_ARIA': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_AUTH': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_BOLD': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_BYE': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_CANCEL': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_CAPTION': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_COMMONS_CHECK': 'https://files.catbox.moe/58gf6k.jpg',
                   'IMAGE_COMPLETE': images,
-                  'IMAGE_CONEDIT': 'https://envs.sh/CPd.jpg',
-                  'IMAGE_CONPRIVATE': 'https://envs.sh/CPQ.jpg',
-                  'IMAGE_CONSET': 'https://envs.sh/CPE.jpg',
-                  'IMAGE_CONVIEW': 'https://envs.sh/CPD.jpg',
-                  'IMAGE_DUMP': 'https://envs.sh/CbV.jpg',
-                  'IMAGE_EXTENSION': 'https://envs.sh/CbN.jpg',
-                  'IMAGE_GD': 'https://envs.sh/Cb6.jpg',
-                  'IMAGE_HELP': 'https://envs.sh/Cbm.jpg',
-                  'IMAGE_HTML': 'https://envs.sh/Cba.jpg',
-                  'IMAGE_IMDB': 'https://envs.sh/Cbf.jpg',
-                  'IMAGE_INFO': 'https://envs.sh/Cbg.jpg',
-                  'IMAGE_ITALIC': 'https://envs.sh/JlG.jpg',
-                  'IMAGE_JD': 'https://envs.sh/CPu.jpg',
-                  'IMAGE_LOGS': 'https://envs.sh/CP2.jpg',
-                  'IMAGE_MDL': 'https://envs.sh/CPd.jpg',
-                  'IMAGE_MEDINFO': 'https://envs.sh/CPQ.jpg',
-                  'IMAGE_METADATA': 'https://envs.sh/CPE.jpg',
-                  'IMAGE_MONO': 'https://envs.sh/CPD.jpg',
-                  'IMAGE_NORMAL': 'https://envs.sh/CbV.jpg',
-                  'IMAGE_OWNER': 'https://envs.sh/CbN.jpg',
-                  'IMAGE_PAUSE': 'https://envs.sh/Cb6.jpg',
-                  'IMAGE_PRENAME': 'https://envs.sh/Cbm.jpg',
-                  'IMAGE_QBIT': 'https://envs.sh/Cba.jpg',
-                  'IMAGE_RCLONE': 'https://envs.sh/Cbf.jpg',
-                  'IMAGE_REMNAME': 'https://envs.sh/Cbg.jpg',
-                  'IMAGE_RSS': 'https://envs.sh/JlG.jpg',
-                  'IMAGE_SEARCH': 'https://envs.sh/Cb-.jpg',
-                  'IMAGE_STATS': 'https://envs.sh/Cbx.jpg',
-                  'IMAGE_STATUS': 'https://envs.sh/Cby.jpg',
-                  'IMAGE_SUFNAME': 'https://envs.sh/CbX.jpg',
-                  'IMAGE_TMDB': 'https://envs.sh/CPu.jpg',
-                  'IMAGE_TXT': 'https://envs.sh/Cbl.jpg',
-                  'IMAGE_UNAUTH': 'https://envs.sh/CP2.jpg',
-                  'IMAGE_UNKNOW': 'https://envs.sh/CPd.jpg',
-                  'IMAGE_USER': 'https://envs.sh/CPQ.jpg',
-                  'IMAGE_USETIINGS': 'https://envs.sh/CPE.jpg',
-                  'IMAGE_VIDTOOLS': 'https://envs.sh/CPD.jpg',
-                  'IMAGE_WEL': 'https://envs.sh/CbV.jpg',
-                  'IMAGE_WIBU': 'https://envs.sh/CbN.jpg',
-                  'IMAGE_YT': 'https://envs.sh/Cb6.jpg'}
+                  'IMAGE_CONEDIT': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_CONPRIVATE': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_CONSET': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_CONVIEW': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_DUMP': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_EXTENSION': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_GD': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_HELP': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_HTML': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_IMDB': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_INFO': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_ITALIC': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_JD': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_LOGS': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_MDL': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_MEDINFO': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_METADATA': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_MONO': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_NORMAL': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_OWNER': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_PAUSE': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_PRENAME': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_QBIT': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_RCLONE': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_REMNAME': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_RSS': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_SEARCH': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_STATS': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_STATUS': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_SUFNAME': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_TMDB': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_TXT': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_UNAUTH': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_UNKNOW': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_USER': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_USETIINGS': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_VIDTOOLS': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_WEL': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_WIBU': 'https://files.catbox.moe/58gf6k.jpg',
+                  'IMAGE_YT': 'https://files.catbox.moe/58gf6k.jpg'}
 
 
 async def load_config():
@@ -332,55 +332,55 @@ async def load_config():
 
     # ============================= IMAGES =================================
     ENABLE_IMAGE_MODE = environ.get('ENABLE_IMAGE_MODE', 'True').lower() == 'true'
-    IMAGE_ARIA = environ.get('IMAGE_ARIA', 'https://envs.sh/Cb-.jpg')
-    IMAGE_AUTH = environ.get('IMAGE_AUTH', 'https://envs.sh/Cbx.jpg')
-    IMAGE_BOLD = environ.get('IMAGE_BOLD', 'https://envs.sh/Cby.jpg')
-    IMAGE_BYE = environ.get('IMAGE_BYE', 'https://envs.sh/CbX.jpg')
-    IMAGE_CANCEL = environ.get('IMAGE_CANCEL', 'https://envs.sh/CPu.jpg')
-    IMAGE_CAPTION = environ.get('IMAGE_CAPTION', 'https://envs.sh/Cbl.jpg')
-    IMAGE_COMMONS_CHECK = environ.get('IMAGE_COMMONS_CHECK', 'https://envs.sh/CP2.jpg')
+    IMAGE_ARIA = environ.get('IMAGE_ARIA', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_AUTH = environ.get('IMAGE_AUTH', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_BOLD = environ.get('IMAGE_BOLD', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_BYE = environ.get('IMAGE_BYE', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_CANCEL = environ.get('IMAGE_CANCEL', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_CAPTION = environ.get('IMAGE_CAPTION', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_COMMONS_CHECK = environ.get('IMAGE_COMMONS_CHECK', 'https://files.catbox.moe/58gf6k.jpg')
     IMAGE_COMPLETE = environ.get('IMAGE_COMPLETE', images)
-    IMAGE_CONEDIT = environ.get('IMAGE_CONEDIT', 'https://envs.sh/CPd.jpg')
-    IMAGE_CONPRIVATE = environ.get('IMAGE_CONPRIVATE', 'https://envs.sh/CPQ.jpg')
-    IMAGE_CONSET = environ.get('IMAGE_CONSET', 'https://envs.sh/CPE.jpg')
-    IMAGE_CONVIEW = environ.get('IMAGE_CONVIEW', 'https://envs.sh/CPD.jpg')
-    IMAGE_DUMP = environ.get('IMAGE_DUMP', 'https://envs.sh/CbV.jpg')
-    IMAGE_EXTENSION = environ.get('IMAGE_EXTENSION', 'https://envs.sh/CbN.jpg')
-    IMAGE_GD = environ.get('IMAGE_GD', 'https://envs.sh/Cb6.jpg')
-    IMAGE_HELP = environ.get('IMAGE_HELP', 'https://envs.sh/Cbm.jpg')
-    IMAGE_HTML = environ.get('IMAGE_HTML', 'https://envs.sh/Cba.jpg')
-    IMAGE_IMDB = environ.get('IMAGE_IMDB', 'https://envs.sh/Cbf.jpg')
-    IMAGE_INFO = environ.get('IMAGE_INFO', 'https://envs.sh/Cbg.jpg')
-    IMAGE_ITALIC = environ.get('IMAGE_ITALIC', 'https://envs.sh/JlG.jpg')
-    IMAGE_JD = environ.get('IMAGE_JD', 'https://envs.sh/CPu.jpg')
-    IMAGE_LOGS = environ.get('IMAGE_LOGS', 'https://envs.sh/CP2.jpg')
-    IMAGE_MDL = environ.get('IMAGE_MDL', 'https://envs.sh/CPd.jpg')
-    IMAGE_MEDINFO = environ.get('IMAGE_MEDINFO', 'https://envs.sh/CPQ.jpg')
-    IMAGE_METADATA = environ.get('IMAGE_METADATA', 'https://envs.sh/CPE.jpg')
-    IMAGE_MONO = environ.get('IMAGE_MONO', 'https://envs.sh/CPD.jpg')
-    IMAGE_NORMAL = environ.get('IMAGE_NORMAL', 'https://envs.sh/CbV.jpg')
-    IMAGE_OWNER = environ.get('IMAGE_OWNER', 'https://envs.sh/CbN.jpg')
-    IMAGE_PAUSE = environ.get('IMAGE_PAUSE', 'https://envs.sh/Cb6.jpg')
-    IMAGE_PRENAME = environ.get('IMAGE_PRENAME', 'https://envs.sh/Cbm.jpg')
-    IMAGE_QBIT = environ.get('IMAGE_QBIT', 'https://envs.sh/Cba.jpg')
-    IMAGE_RCLONE = environ.get('IMAGE_RCLONE', 'https://envs.sh/Cbf.jpg')
-    IMAGE_REMNAME = environ.get('IMAGE_REMNAME', 'https://envs.sh/Cbg.jpg')
-    IMAGE_RSS = environ.get('IMAGE_RSS', 'https://envs.sh/JlG.jpg')
-    IMAGE_SEARCH = environ.get('IMAGE_SEARCH', 'https://envs.sh/Cb-.jpg')
-    IMAGE_STATS = environ.get('IMAGE_STATS', 'https://envs.sh/Cbx.jpg')
-    IMAGE_STATUS = environ.get('IMAGE_STATUS', 'https://envs.sh/Cby.jpg')
-    IMAGE_SUFNAME = environ.get('IMAGE_SUFNAME', 'https://envs.sh/CbX.jpg')
-    IMAGE_TMDB = environ.get('IMAGE_TMDB', 'https://envs.sh/CPu.jpg')
-    IMAGE_TXT = environ.get('IMAGE_TXT', 'https://envs.sh/Cbl.jpg')
-    IMAGE_UNAUTH = environ.get('IMAGE_UNAUTH', 'https://envs.sh/CP2.jpg')
-    IMAGE_UNKNOW = environ.get('IMAGE_UNKNOW', 'https://envs.sh/CPd.jpg')
-    IMAGE_USER = environ.get('IMAGE_USER', 'https://envs.sh/CPQ.jpg')
-    IMAGE_USETIINGS = environ.get('IMAGE_USETIINGS', 'https://envs.sh/CPE.jpg')
-    IMAGE_VIDTOOLS = environ.get('IMAGE_VIDTOOLS', 'https://envs.sh/CPD.jpg')
-    IMAGE_WEL = environ.get('IMAGE_WEL', 'https://envs.sh/CbV.jpg')
-    IMAGE_WIBU = environ.get('IMAGE_WIBU', 'https://envs.sh/CbN.jpg')
-    IMAGE_YT = environ.get('IMAGE_YT', 'https://envs.sh/Cb6.jpg')
-    IMAGE_ZIP = environ.get('IMAGE_ZIP', 'https://envs.sh/JlG.jpg')
+    IMAGE_CONEDIT = environ.get('IMAGE_CONEDIT', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_CONPRIVATE = environ.get('IMAGE_CONPRIVATE', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_CONSET = environ.get('IMAGE_CONSET', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_CONVIEW = environ.get('IMAGE_CONVIEW', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_DUMP = environ.get('IMAGE_DUMP', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_EXTENSION = environ.get('IMAGE_EXTENSION', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_GD = environ.get('IMAGE_GD', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_HELP = environ.get('IMAGE_HELP', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_HTML = environ.get('IMAGE_HTML', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_IMDB = environ.get('IMAGE_IMDB', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_INFO = environ.get('IMAGE_INFO', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_ITALIC = environ.get('IMAGE_ITALIC', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_JD = environ.get('IMAGE_JD', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_LOGS = environ.get('IMAGE_LOGS', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_MDL = environ.get('IMAGE_MDL', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_MEDINFO = environ.get('IMAGE_MEDINFO', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_METADATA = environ.get('IMAGE_METADATA', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_MONO = environ.get('IMAGE_MONO', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_NORMAL = environ.get('IMAGE_NORMAL', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_OWNER = environ.get('IMAGE_OWNER', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_PAUSE = environ.get('IMAGE_PAUSE', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_PRENAME = environ.get('IMAGE_PRENAME', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_QBIT = environ.get('IMAGE_QBIT', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_RCLONE = environ.get('IMAGE_RCLONE', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_REMNAME = environ.get('IMAGE_REMNAME', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_RSS = environ.get('IMAGE_RSS', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_SEARCH = environ.get('IMAGE_SEARCH', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_STATS = environ.get('IMAGE_STATS', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_STATUS = environ.get('IMAGE_STATUS', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_SUFNAME = environ.get('IMAGE_SUFNAME', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_TMDB = environ.get('IMAGE_TMDB', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_TXT = environ.get('IMAGE_TXT', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_UNAUTH = environ.get('IMAGE_UNAUTH', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_UNKNOW = environ.get('IMAGE_UNKNOW', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_USER = environ.get('IMAGE_USER', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_USETIINGS = environ.get('IMAGE_USETIINGS', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_VIDTOOLS = environ.get('IMAGE_VIDTOOLS', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_WEL = environ.get('IMAGE_WEL', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_WIBU = environ.get('IMAGE_WIBU', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_YT = environ.get('IMAGE_YT', 'https://files.catbox.moe/58gf6k.jpg')
+    IMAGE_ZIP = environ.get('IMAGE_ZIP', 'https://files.catbox.moe/58gf6k.jpg')
     # ======================================================================
 
     # =========================== ACCOUNTS =================================
