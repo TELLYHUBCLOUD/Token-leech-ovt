@@ -180,7 +180,7 @@ async def bypass(client: Client, message: Message):
 
 
 @new_task
-async def cb_bypass(_, query):
+async def cb_bypass(client, query):
     data = query.data.split()
     if len(data) < 3:
         return
@@ -198,7 +198,7 @@ async def cb_bypass(_, query):
     query.message.text = f"/{'leech' if is_leech else 'mirror'} {url}"
     query.message.from_user = query.from_user
 
-    Mirror(query.client, query.message, isLeech=is_leech).newEvent()
+    Mirror(client, query.message, isLeech=is_leech).newEvent()
 
 
 bot.add_handler(MessageHandler(bypass, filters=command(BotCommands.BypassCommand) & CustomFilters.authorized))
