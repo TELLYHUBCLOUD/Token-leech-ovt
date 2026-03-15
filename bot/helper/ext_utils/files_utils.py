@@ -146,7 +146,8 @@ async def downlod_content(url: str, name: str):
                 return True
             LOGGER.error('Failed to download %s, got respons %s.', name, r.status)
     except Exception as e:
-        LOGGER.error(e)
+        LOGGER.error(f'Failed to download {name} from {url}: {e}')
+    return False
 
 
 async def join_files(path):
