@@ -1,5 +1,6 @@
 from pyrogram import Client
 from pyrogram.filters import command, regex
+import copy
 from pyrogram.handlers import MessageHandler, CallbackQueryHandler
 from pyrogram.types import Message
 from random import choice
@@ -19,9 +20,6 @@ from bot.helper.telegram_helper.button_build import ButtonMaker
 from bot.helper.telegram_helper.filters import CustomFilters
 from bot.helper.telegram_helper.message_utils import limit, auto_delete_message, sendMessage, editMessage, copyMessage, deleteMessage, sendPhoto
 from bot.modules.mirror_leech import Mirror
-from uuid import uuid4
-
-bypass_dict = {}
 
 
 class Bypass(TaskListener):
@@ -128,32 +126,33 @@ class Bypass(TaskListener):
         buttons = ButtonMaker()
         buttons.button_link('Source Link', self.link)
 
-        # Add buttons for multi-quality bypasses
+        # If the generated direct link outputs multiple links, automatically download them
         if any(x in self.link for x in ['swift.multiquality.click', 'rareanimes.app', 'codedew.com']):
-            msg = msg.replace(f'\n{result}', '')
+            await deleteMessage(self.editable)
             if isinstance(original_result, dict) and 'contents' in original_result:
                 contents = original_result['contents']
             else:
                 contents = [{'url': original_result}] if isinstance(original_result, str) else []
+
             for res_item in contents:
                 url_str = res_item["url"]
-                # URL is in format "http://... (1080p)"
                 parts = url_str.rsplit(' ', 1)
                 if len(parts) == 2:
                     link_url = parts[0].strip()
-                    if link_url.startswith('http'):
-                        uid = uuid4().hex
-                        bypass_dict[uid] = (link_url, res_item.get('headers', ''))
-                        quality = parts[1].strip('()')
-                        buttons.button_data(f"L {quality}", f"byp l {uid}")
-                        buttons.button_data(f"M {quality}", f"byp m {uid}")
                 else:
                     link_url = url_str.strip()
-                    if link_url.startswith('http'):
-                        uid = uuid4().hex
-                        bypass_dict[uid] = (link_url, res_item.get('headers', ''))
-                        buttons.button_data("Leech", f"byp l {uid}")
-                        buttons.button_data("Mirror", f"byp m {uid}")
+
+                if link_url.startswith('http'):
+                    headers = res_item.get('headers', '')
+                    msg_text = f"/leech {link_url}"
+                    if headers:
+                        msg_text += f" -h {headers}"
+
+                    mock_message = copy.copy(self.message)
+                    mock_message.text = msg_text
+
+                    Mirror(self.client, mock_message, isLeech=True).newEvent()
+            return
 
         if config_dict['ENABLE_IMAGE_MODE']:
             limit.caption(msg)
@@ -179,32 +178,4 @@ async def bypass(client: Client, message: Message):
     Bypass(client, message).newEvent()
 
 
-@new_task
-async def cb_bypass(client, query):
-    data = query.data.split()
-    if len(data) < 3:
-        return
-
-    action, uid = data[1], data[2]
-    item = bypass_dict.get(uid)
-    if not item:
-        await query.answer("Link has expired!", show_alert=True)
-        return
-
-    url, headers = item
-    await query.answer("Starting task...")
-    is_leech = action == 'l'
-
-    # Mock message text to trick get_link and arg_parser
-    msg_text = f"/{'leech' if is_leech else 'mirror'} {url}"
-    if headers:
-        msg_text += f" -h {headers}"
-
-    query.message.text = msg_text
-    query.message.from_user = query.from_user
-
-    Mirror(client, query.message, isLeech=is_leech).newEvent()
-
-
 bot.add_handler(MessageHandler(bypass, filters=command(BotCommands.BypassCommand) & CustomFilters.authorized))
-bot.add_handler(CallbackQueryHandler(cb_bypass, filters=regex('^byp')))

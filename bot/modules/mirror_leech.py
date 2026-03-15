@@ -1,5 +1,6 @@
 from aiofiles.os import path as aiopath
 from asyncio import sleep, gather
+import copy
 from base64 import b64encode
 from os import path as ospath
 from pyrogram import Client
@@ -239,7 +240,19 @@ class Mirror(TaskListener):
                     if isinstance(self.link, dict):
                         contents = self.link.get('contents', [])
                         if 'total_size' not in self.link and len(contents) > 1:
-                            await editMessage('<i>This link contains multiple resolutions. Please use /bypass command to select the download link!</i>', self.editable)
+                            await deleteMessage(self.editable)
+                            for res_item in contents:
+                                url_str = res_item["url"]
+                                parts = url_str.rsplit(' ', 1)
+                                link_url = parts[0].strip() if len(parts) == 2 else url_str.strip()
+                                if link_url.startswith('http'):
+                                    h_str = res_item.get('headers', '')
+                                    msg_text = f"/{'leech' if self.isLeech else 'mirror'} {link_url}"
+                                    if h_str:
+                                        msg_text += f" -h {h_str}"
+                                    mock_message = copy.copy(self.message)
+                                    mock_message.text = msg_text
+                                    Mirror(self.client, mock_message, self.isQbit, self.isJd, self.isLeech, self.vidMode, self.sameDir, self.bulk, self.multiTag, self.options).newEvent()
                             self.removeFromSameDir()
                             return
                         elif 'total_size' not in self.link and len(contents) == 1:
