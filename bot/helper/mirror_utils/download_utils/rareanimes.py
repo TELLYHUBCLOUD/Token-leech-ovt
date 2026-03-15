@@ -22,12 +22,16 @@ def rareanimes_bypass(url: str) -> dict:
     try:
         driver = webdriver.Chrome(options=options)
         driver.get(url)
-        time.sleep(5)
+        time.sleep(10)
 
         resolutions = ['360p', '480p', '720p', '1080p']
         found_links = {}
 
         iframes = driver.find_elements(By.TAG_NAME, "iframe")
+        if not iframes:
+            time.sleep(5)
+            iframes = driver.find_elements(By.TAG_NAME, "iframe")
+
         for i in range(len(iframes)):
             src = iframes[i].get_attribute('src')
             if src and ("razorshell" in src or "multiquality" in src):

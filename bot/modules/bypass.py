@@ -137,9 +137,13 @@ class Bypass(TaskListener):
                 # URL is in format "http://... (1080p)"
                 parts = url_str.rsplit(' ', 1)
                 if len(parts) == 2:
-                    buttons.button_link(parts[1].strip('()'), parts[0])
+                    link_url = parts[0].strip()
+                    if link_url.startswith('http'):
+                        buttons.button_link(parts[1].strip('()'), link_url)
                 else:
-                    buttons.button_link('Download', url_str)
+                    link_url = url_str.strip()
+                    if link_url.startswith('http'):
+                        buttons.button_link('Download', link_url)
 
         if config_dict['ENABLE_IMAGE_MODE']:
             limit.caption(msg)
