@@ -35,6 +35,7 @@ def rareanimes_bypass(url: str) -> dict:
             time.sleep(5)
             iframes = driver.find_elements(By.TAG_NAME, "iframe")
 
+        header_str = ""
         for i in range(len(iframes)):
             src = iframes[i].get_attribute('src')
             if src and ("razorshell" in src or "multiquality" in src):
@@ -49,6 +50,14 @@ def rareanimes_bypass(url: str) -> dict:
                         for res in resolutions:
                             if res in text and res not in found_links and "http" in href:
                                 found_links[res] = href
+
+                # Get cookies and user-agent for aria2c
+                user_agent = driver.execute_script("return navigator.userAgent;")
+                cookies = "; ".join([f"{cookie['name']}={cookie['value']}" for cookie in driver.get_cookies()])
+                header_str = f"User-Agent: {user_agent}"
+                if cookies:
+                    header_str += f" | Cookie: {cookies}"
+                header_str += f" | Referer: {downlead_url}"
                 break
 
         driver.quit()
@@ -60,7 +69,7 @@ def rareanimes_bypass(url: str) -> dict:
         # dict with 'contents': [{'url': 'link 360p (360p)'}, {'url': 'link 480p (480p)'}]
         contents = []
         for res, link in found_links.items():
-            contents.append({'url': f"{link} ({res})"})
+            contents.append({'url': f"{link} ({res})", 'headers': header_str})
 
         return {'contents': contents}
     except Exception as e:

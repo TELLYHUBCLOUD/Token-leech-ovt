@@ -143,7 +143,7 @@ class Bypass(TaskListener):
                     link_url = parts[0].strip()
                     if link_url.startswith('http'):
                         uid = uuid4().hex
-                        bypass_dict[uid] = link_url
+                        bypass_dict[uid] = (link_url, res_item.get('headers', ''))
                         quality = parts[1].strip('()')
                         buttons.button_data(f"L {quality}", f"byp l {uid}")
                         buttons.button_data(f"M {quality}", f"byp m {uid}")
@@ -151,7 +151,7 @@ class Bypass(TaskListener):
                     link_url = url_str.strip()
                     if link_url.startswith('http'):
                         uid = uuid4().hex
-                        bypass_dict[uid] = link_url
+                        bypass_dict[uid] = (link_url, res_item.get('headers', ''))
                         buttons.button_data("Leech", f"byp l {uid}")
                         buttons.button_data("Mirror", f"byp m {uid}")
 
@@ -186,16 +186,21 @@ async def cb_bypass(client, query):
         return
 
     action, uid = data[1], data[2]
-    url = bypass_dict.get(uid)
-    if not url:
+    item = bypass_dict.get(uid)
+    if not item:
         await query.answer("Link has expired!", show_alert=True)
         return
 
+    url, headers = item
     await query.answer("Starting task...")
     is_leech = action == 'l'
 
-    # Mock message text to trick get_link
-    query.message.text = f"/{'leech' if is_leech else 'mirror'} {url}"
+    # Mock message text to trick get_link and arg_parser
+    msg_text = f"/{'leech' if is_leech else 'mirror'} {url}"
+    if headers:
+        msg_text += f" -h {headers}"
+
+    query.message.text = msg_text
     query.message.from_user = query.from_user
 
     Mirror(client, query.message, isLeech=is_leech).newEvent()
