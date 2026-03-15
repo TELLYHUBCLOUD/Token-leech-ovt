@@ -137,6 +137,8 @@ def get_mime_type(file_path):
 
 
 async def downlod_content(url: str, name: str):
+    if 'envs.sh' in url:
+        url = url.replace('envs.sh/CPD.jpg', 'files.catbox.moe/58gf6k.jpg').replace('envs.sh', 'files.catbox.moe')
     try:
         async with ClientSession() as session, session.get(url, ssl=False) as r:
             if r.status == 200:

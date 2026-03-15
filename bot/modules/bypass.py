@@ -89,6 +89,12 @@ class Bypass(TaskListener):
         self.editable = await sendMessage(f'<i>Bypassing {urlparse(self.link).netloc} link, please wait...</i>', self.message)
         result, start_time = '', time()
 
+        # If the direct link is a multi-quality site, skip generator and start download directly
+        if any(x in self.link for x in ['swift.multiquality.click', 'rareanimes.app', 'codedew.com']):
+            await deleteMessage(self.editable)
+            Mirror(self.client, self.message, isLeech=True).newEvent()
+            return
+
         try:
             result = await sync_to_async(direct_link_generator, self.link)
         except DirectDownloadLinkException as err:
@@ -125,12 +131,6 @@ class Bypass(TaskListener):
                f'<b>└ Bypass Result:</b>\n{result}')
         buttons = ButtonMaker()
         buttons.button_link('Source Link', self.link)
-
-        # If the generated direct link outputs multiple links, automatically download them
-        if any(x in self.link for x in ['swift.multiquality.click', 'rareanimes.app', 'codedew.com']):
-            await deleteMessage(self.editable)
-            Mirror(self.client, self.message, isLeech=True).newEvent()
-            return
 
         if config_dict['ENABLE_IMAGE_MODE']:
             limit.caption(msg)
