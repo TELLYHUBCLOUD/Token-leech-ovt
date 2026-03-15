@@ -156,8 +156,8 @@ async def add_selenium_download(listener, path, url):
                     wait_time += 1
 
                     current_files = set(listdir(path))
-                    crd = [f for f in current_files if f.endswith('.crdow\
-nload')]
+                    crd = [f for f in current_files
+                           if f.endswith('.crdownload')]
 
                     if crd:
                         filepath = ospath.join(path, crd[0])

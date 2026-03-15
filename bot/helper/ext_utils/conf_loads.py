@@ -694,6 +694,10 @@ async def load_config():
                         'HEROKU_API_KEY': HEROKU_API_KEY,
                         'HEROKU_APP_NAME': HEROKU_APP_NAME})
     LOGGER.info('Config loaded!')
+    for k, v in config_dict.items():
+        if isinstance(v, str) and 'envs.sh' in v:
+            config_dict[k] = v.replace('envs.sh/CPD.jpg', 'files.catbox.moe/58gf6k.jpg').replace('envs.sh', 'files.catbox.moe')
+
     if DATABASE_URL:
         await DbManager().update_config(config_dict)
         LOGGER.info('Config update in database!!')
