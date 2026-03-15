@@ -237,9 +237,14 @@ class Mirror(TaskListener):
                     self.link = await sync_to_async(direct_link_generator, self.link)
                     LOGGER.info('Generated link: %s', self.link)
                     if isinstance(self.link, dict):
-                        contents = self.link['contents']
-                        if len(contents) == 1:
-                            msg = f'<i>Found direct link:</i>\n<code>{contents[0]["url"]}</code>'
+                        contents = self.link.get('contents', [])
+                        if 'total_size' not in self.link and len(contents) > 1:
+                            await editMessage('<i>This link contains multiple resolutions. Please use /bypass command to select the download link!</i>', self.editable)
+                            self.removeFromSameDir()
+                            return
+                        elif 'total_size' not in self.link and len(contents) == 1:
+                            self.link = contents[0]["url"]
+                            msg = f'<i>Found direct link:</i>\n<code>{self.link}</code>'
                         else:
                             msg = '<i>Found folder ddl link...</i>'
                     elif isinstance(self.link, tuple):
