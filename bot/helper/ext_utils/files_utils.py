@@ -144,9 +144,9 @@ async def downlod_content(url: str, name: str):
                     async with aiopen(name, 'ba') as f:
                         await f.write(data)
                 return True
-            LOGGER.error('Failed to download %s, got respons %s.', name, r.status)
+            LOGGER.warning(f'Failed to download {name}, got response {r.status}.')
     except Exception as e:
-        LOGGER.error(f'Failed to download {name} from {url}: {e}')
+        LOGGER.warning(f'Failed to download {name} from {url}: {e}')
     return False
 
 
