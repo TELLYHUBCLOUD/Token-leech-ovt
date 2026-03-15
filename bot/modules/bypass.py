@@ -98,6 +98,7 @@ class Bypass(TaskListener):
             await editMessage(f'{self.tag}, {err}', self.editable)
             return
 
+        original_result = result
         if ('filecrypt.co' not in self.link and 'psa.' not in self.link
             and all(x not in self.link for x in sites.FEMBED)):
             if isinstance(result, dict):
@@ -126,12 +127,10 @@ class Bypass(TaskListener):
         # Add buttons for multi-quality bypasses
         if any(x in self.link for x in ['swift.multiquality.click', 'rareanimes.app', 'codedew.com']):
             msg = msg.replace(f'\n{result}', '')
-            if isinstance(result, dict) and 'contents' in result:
-                contents = result['contents']
-            elif isinstance(result, str):
-                contents = [{'url': u} for u in result.split('\n')]
+            if isinstance(original_result, dict) and 'contents' in original_result:
+                contents = original_result['contents']
             else:
-                contents = []
+                contents = [{'url': original_result}] if isinstance(original_result, str) else []
             for res_item in contents:
                 url_str = res_item["url"]
                 # URL is in format "http://... (1080p)"
