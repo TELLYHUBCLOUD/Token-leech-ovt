@@ -244,7 +244,8 @@ async def message_handler(_, message: Message, obj: SelectMode, is_sub=False):
 
         if valid:
             vid_dir = ospath.join('vid_vid', str(obj.listener.mid))
-            await makedirs(vid_dir, exist_ok=True)
+            import os
+            os.makedirs(vid_dir, exist_ok=True)
             fpath = await message.download(ospath.join(vid_dir, getattr(media, 'file_name', None) or f"{time()}"))
             if 'vid_list' not in obj.extra_data:
                 obj.extra_data['vid_list'] = []

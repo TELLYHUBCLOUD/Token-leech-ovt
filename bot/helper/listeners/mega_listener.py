@@ -1,7 +1,10 @@
 from time import time
 from secrets import token_hex
 from aiofiles.os import makedirs
-from asyncio import create_subprocess_exec, subprocess, wait_for
+from asyncio import create_subprocess_exec, wait_for
+from asyncio import subprocess as asynciosubprocess
+import subprocess
+import shutil
 from re import search as re_search
 from contextlib import suppress
 
@@ -112,8 +115,34 @@ class MegaAppListener:
         except Exception as e:
             LOGGER.error(f"Mega Cleanup Failed: {e}")
 
+    def _install_megacmd(self):
+        if shutil.which('mega-get'):
+            return
+        LOGGER.info("MEGAcmd not found, installing on the fly...")
+        script = '''
+        . /etc/os-release
+        if [ "$NAME" = "Ubuntu" ]; then
+            OS_URL="xUbuntu_${VERSION_ID}"
+        elif [ "$NAME" = "Debian GNU/Linux" ]; then
+            OS_URL="Debian_${VERSION_ID}"
+        else
+            OS_URL="xUbuntu_22.04"
+        fi
+        wget -q "https://mega.nz/linux/repo/${OS_URL}/amd64/"\
+"megacmd-${OS_URL}_amd64.deb" -O megacmd.deb
+        apt-get update && apt-get install -y ./megacmd.deb || \
+        apt-get install -f -y
+        rm megacmd.deb
+        '''
+        try:
+            subprocess.run(["bash", "-c", script], check=True)
+        except Exception as e:
+            LOGGER.error(f"Failed to install MEGAcmd: {e}")
+            raise Exception("Failed to install MEGAcmd dependencies")
+
     async def download(self, path):
         try:
+            self._install_megacmd()
             await self.login()
             await self.create_temp_path()
             await self.import_link()
@@ -164,8 +193,8 @@ class MegaAppListener:
 
             self.process = await create_subprocess_exec(
                 *command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
+                stdout=asynciosubprocess.PIPE,
+                stderr=asynciosubprocess.STDOUT,
             )
 
             while True:
