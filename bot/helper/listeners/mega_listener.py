@@ -56,7 +56,7 @@ class MegaAppListener:
             except Exception as e:
                 raise Exception(f"Mega Login Failed: {e}")
         else:
-            raise Exception("MegaCMD: Credentials Missing! Login required")
+            pass
 
     async def create_temp_path(self):
         await cmd_exec(["mega-mkdir", self.temp_path])
