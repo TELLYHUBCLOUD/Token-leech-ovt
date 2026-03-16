@@ -1,6 +1,5 @@
 from aiofiles.os import path as aiopath
 from asyncio import sleep, gather
-import copy
 from base64 import b64encode
 from os import path as ospath
 from pyrogram import Client
@@ -223,7 +222,7 @@ class Mirror(TaskListener):
             return
 
         if is_mega_link(self.link):
-            self.isJd = False
+            self.isJd = True
 
         if is_magnet(self.link):
             self.isJd = False
