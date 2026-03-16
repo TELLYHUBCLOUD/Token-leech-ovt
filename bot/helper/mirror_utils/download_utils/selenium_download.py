@@ -59,6 +59,21 @@ class SeleniumDownloadStatus:
     def download(self):
         return self
 
+    def task(self):
+        return self
+
+    def processed_bytes(self):
+        return get_readable_file_size(self._downloaded)
+
+    def engine(self):
+        return "Selenium"
+
+    def elapsed(self):
+        return "~"
+
+    def timeout(self):
+        return "N/A"
+
 
 async def add_selenium_download(listener, path, url):
     await listener.onDownloadStart()
@@ -199,6 +214,9 @@ async def add_selenium_download(listener, path, url):
                                 LOGGER.warning(warning_msg)
                                 downloading = False
 
+        except Exception as e:
+            LOGGER.error(f"Selenium download thread error: {e}")
+            raise e
         finally:
             driver.quit()
 
@@ -206,4 +224,4 @@ async def add_selenium_download(listener, path, url):
         await sync_to_async(_download_sync)
         await listener.onDownloadComplete()
     except Exception as e:
-        await listener.onDownloadError(str(e))
+        await listener.onDownloadError(f"Selenium Error: {e}")
