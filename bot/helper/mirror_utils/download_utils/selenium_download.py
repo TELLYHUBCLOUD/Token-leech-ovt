@@ -4,7 +4,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 import requests
 
-from bot import LOGGER, task_dict, task_dict_lock
+from bot import LOGGER, task_dict
 from bot.helper.ext_utils.bot_utils import sync_to_async
 from bot.helper.ext_utils.status_utils import (
     get_readable_file_size,
@@ -170,8 +170,9 @@ async def add_selenium_download(listener, path, url):
                 status = SeleniumDownloadStatus(
                     st_name, total_size, f"sel_{res}", listener
                 )
-                with task_dict_lock:
-                    task_dict[listener.mid] = status
+
+                # Dictionary assignment is thread-safe in Python
+                task_dict[listener.mid] = status
 
                 downloading = True
                 wait_time = 0
