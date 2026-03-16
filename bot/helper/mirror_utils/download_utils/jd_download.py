@@ -201,26 +201,30 @@ async def add_jd_download(listener: task.TaskListener, path: str):
 
     await retry_function(0, jdownloader.device.linkgrabber.move_to_downloadlist, package_ids=online_packages)
 
-    await sleep(0.5)
-
-    download_packages = await retry_function(0, jdownloader.device.downloads.query_packages, [{'saveTo': True}])
+    packages = []
     async with jd_lock:
-        packages = []
-        for pack in download_packages:
-            if pack['saveTo'].startswith(path):
-                if not packages:
-                    del jd_downloads[gid]
-                    gid = pack['uuid']
-                    jd_downloads[gid] = {'status': 'down'}
-                packages.append(pack['uuid'])
-        if packages:
-            jd_downloads[gid]['ids'] = packages
+        for _ in range(15):
+            await sleep(1)
+            download_packages = await retry_function(0, jdownloader.device.downloads.query_packages, [{'saveTo': True}])
+            for pack in download_packages:
+                if pack['saveTo'].startswith(path):
+                    if not packages:
+                        del jd_downloads[gid]
+                        gid = pack['uuid']
+                        jd_downloads[gid] = {'status': 'down'}
+                    packages.append(pack['uuid'])
+            if packages:
+                jd_downloads[gid]['ids'] = packages
+                break
 
     if not packages:
-        await listener.onDownloadError('This download have been removed manually!')
+        await listener.onDownloadError(
+            'This download have been removed manually!'
+        )
         return
 
-    await retry_function(0, jdownloader.device.downloads.force_download, package_ids=packages)
+    await retry_function(0, jdownloader.device.downloads.force_download,
+                         package_ids=packages)
 
     async with task_dict_lock:
         task_dict[listener.mid] = JDownloaderStatus(listener, f'{gid}')
