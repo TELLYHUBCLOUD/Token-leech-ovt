@@ -71,6 +71,12 @@ async def add_selenium_download(listener, path, url):
         options.add_argument('--no-sandbox')
         options.add_argument('--disable-dev-shm-usage')
         options.add_argument('--disable-gpu')
+        options.add_argument('--disable-software-rasterizer')
+        options.add_argument('--single-process')
+        options.add_argument('--disable-extensions')
+        options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; '
+                             'Win64; x64) AppleWebKit/537.36 (KHTML, '
+                             'like Gecko) Chrome/120.0.0.0 Safari/537.36')
 
         prefs = {
             "download.default_directory": path,
@@ -85,7 +91,7 @@ async def add_selenium_download(listener, path, url):
         try:
             LOGGER.info(f"Selenium opening URL: {url}")
             driver.get(url)
-            sleep(5)  # wait for redirects
+            sleep(10)  # wait for redirects and Cloudflare
 
             resolutions = ['360p', '480p', '720p', '1080p']
             found_links = {}
@@ -112,7 +118,7 @@ async def add_selenium_download(listener, path, url):
                         if src and is_tgt:
                             downlead_url = src.replace("/embed/", "/downlead/")
                             driver.get(downlead_url)
-                            sleep(5)
+                            sleep(10)
                             extract_links()
                             if found_links:
                                 break
