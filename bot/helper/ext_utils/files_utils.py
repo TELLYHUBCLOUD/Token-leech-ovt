@@ -146,9 +146,12 @@ async def downlod_content(url: str, name: str):
                     async with aiopen(name, 'ba') as f:
                         await f.write(data)
                 return True
-            LOGGER.warning(f'Failed to download {name}, got response {r.status}.')
+            # Suppress logs for fallback thumbnail URLs that commonly get blocked
+            if 'thumb' not in name:
+                LOGGER.warning(f'Failed to download {name}, got response {r.status}.')
     except Exception as e:
-        LOGGER.warning(f'Failed to download {name} from {url}: {e}')
+        if 'thumb' not in name:
+            LOGGER.warning(f'Failed to download {name} from {url}: {e}')
     return False
 
 
