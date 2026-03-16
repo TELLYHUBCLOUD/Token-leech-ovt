@@ -13,7 +13,7 @@ class MegaDownloadStatus:
         self._speed = 0
         self._downloaded_bytes = 0
         self._size = self.listener.size
-        self._engine = "MEGA"
+        self._engine = "MegaAPI v4.30"
 
     def name(self):
         return self.listener.name
