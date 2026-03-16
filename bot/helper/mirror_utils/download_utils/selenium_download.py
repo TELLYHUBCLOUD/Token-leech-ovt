@@ -1,7 +1,5 @@
 from os import path as ospath, listdir, makedirs
 from time import time, sleep
-from selenium import webdriver
-from selenium.webdriver.common.by import By
 import requests
 
 from bot import LOGGER, task_dict
@@ -79,6 +77,15 @@ async def add_selenium_download(listener, path, url):
     await listener.onDownloadStart()
 
     def _download_sync():
+        try:
+            from selenium import webdriver
+            from selenium.webdriver.common.by import By
+        except ImportError:
+            import subprocess
+            subprocess.run(["pip3", "install", "selenium"], check=True)
+            from selenium import webdriver
+            from selenium.webdriver.common.by import By
+
         makedirs(path, exist_ok=True)
 
         options = webdriver.ChromeOptions()
