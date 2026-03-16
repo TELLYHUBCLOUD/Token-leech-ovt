@@ -21,6 +21,7 @@ from bot.helper.mirror_utils.download_utils.direct_downloader import add_direct_
 from bot.helper.mirror_utils.download_utils.direct_link_generator import direct_link_generator
 from bot.helper.mirror_utils.download_utils.gd_download import add_gd_download
 from bot.helper.mirror_utils.download_utils.jd_download import add_jd_download
+from bot.helper.mirror_utils.download_utils.mega_download import add_mega_download
 from bot.helper.mirror_utils.download_utils.qbit_download import add_qb_torrent
 from bot.helper.mirror_utils.download_utils.rclone_download import add_rclone_download
 from bot.helper.mirror_utils.download_utils.selenium_download import add_selenium_download
@@ -221,9 +222,6 @@ class Mirror(TaskListener):
             self.removeFromSameDir()
             return
 
-        if is_mega_link(self.link):
-            self.isJd = True
-
         if is_magnet(self.link):
             self.isJd = False
 
@@ -277,6 +275,8 @@ class Mirror(TaskListener):
             await TelegramDownloadHelper(self).add_download(reply_to, path)
         elif isinstance(self.link, dict):
             await add_direct_download(self, path)
+        elif is_mega_link(self.link):
+            await add_mega_download(self, f'{path}/')
         elif self.isJd:
             try:
                 await add_jd_download(self, f'{path}/')
