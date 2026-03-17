@@ -122,6 +122,7 @@ class MegaAppListener:
         script = '''
         set -e
         . /etc/os-release
+        ARCH=$(dpkg --print-architecture)
         if [ "$NAME" = "Ubuntu" ]; then
             OS_URL="xUbuntu_${VERSION_ID}"
         elif [ "$NAME" = "Debian GNU/Linux" ]; then
@@ -130,14 +131,14 @@ class MegaAppListener:
             OS_URL="xUbuntu_22.04"
         fi
         apt-get update -y || true
-        DEB_NAME=$(curl -s "https://mega.nz/linux/repo/${OS_URL}/amd64/" | \
+        DEB_NAME=$(curl -s "https://mega.nz/linux/repo/${OS_URL}/${ARCH}/" | \
 grep -oP 'megacmd_[^"]*\\.deb' | head -n 1)
         if [ -z "$DEB_NAME" ]; then
-            echo "Failed to find megacmd package for ${OS_URL}"
+            echo "Failed to find megacmd package for ${OS_URL}/${ARCH}"
             exit 1
         fi
         wget -qO megacmd.deb \
-"https://mega.nz/linux/repo/${OS_URL}/amd64/${DEB_NAME}"
+"https://mega.nz/linux/repo/${OS_URL}/${ARCH}/${DEB_NAME}"
         apt-get install -y ./megacmd.deb || apt-get install -f -y
         rm -f megacmd.deb
         '''
