@@ -3,8 +3,8 @@ from secrets import token_hex
 from aiofiles.os import makedirs
 from asyncio import create_subprocess_exec, wait_for
 from asyncio import subprocess as asynciosubprocess
-import subprocess
 import shutil
+import subprocess as py_subprocess
 from re import search as re_search
 from contextlib import suppress
 
@@ -120,6 +120,7 @@ class MegaAppListener:
             return
         LOGGER.info("MEGAcmd not found, installing on the fly...")
         script = '''
+        set -e
         . /etc/os-release
         if [ "$NAME" = "Ubuntu" ]; then
             OS_URL="xUbuntu_${VERSION_ID}"
@@ -128,14 +129,20 @@ class MegaAppListener:
         else
             OS_URL="xUbuntu_22.04"
         fi
-        wget -q "https://mega.nz/linux/repo/${OS_URL}/amd64/"\
-"megacmd-${OS_URL}_amd64.deb" -O megacmd.deb
-        apt-get update && apt-get install -y ./megacmd.deb || \
-        apt-get install -f -y
-        rm megacmd.deb
+        apt-get update -y || true
+        DEB_NAME=$(curl -s "https://mega.nz/linux/repo/${OS_URL}/amd64/" | \
+grep -oP 'megacmd_[^"]*\\.deb' | head -n 1)
+        if [ -z "$DEB_NAME" ]; then
+            echo "Failed to find megacmd package for ${OS_URL}"
+            exit 1
+        fi
+        wget -qO megacmd.deb \
+"https://mega.nz/linux/repo/${OS_URL}/amd64/${DEB_NAME}"
+        apt-get install -y ./megacmd.deb || apt-get install -f -y
+        rm -f megacmd.deb
         '''
         try:
-            subprocess.run(["bash", "-c", script], check=True)
+            py_subprocess.run(["bash", "-c", script], check=True)
         except Exception as e:
             LOGGER.error(f"Failed to install MEGAcmd: {e}")
             raise Exception("Failed to install MEGAcmd dependencies")
