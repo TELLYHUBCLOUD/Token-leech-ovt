@@ -139,11 +139,26 @@ grep -oP 'megacmd_[^"]*\\.deb' | head -n 1)
         fi
         wget -qO megacmd.deb \
 "https://mega.nz/linux/repo/${OS_URL}/${ARCH}/${DEB_NAME}"
-        apt-get install -y ./megacmd.deb || apt-get install -f -y
-        rm -f megacmd.deb
+        apt-get install -y ./megacmd.deb > apt.log 2>&1 || \
+        (apt-get install -f -y >> apt.log 2>&1 && \
+        apt-get install -y ./megacmd.deb >> apt.log 2>&1)
+        if ! command -v mega-get &> /dev/null; then
+            echo "MEGAcmd installation failed. APT Logs:"
+            cat apt.log
+            exit 1
+        fi
+        rm -f megacmd.deb apt.log
         '''
         try:
-            py_subprocess.run(["bash", "-c", script], check=True)
+            py_subprocess.run(
+                ["bash", "-c", script],
+                check=True,
+                capture_output=True,
+                text=True
+            )
+        except py_subprocess.CalledProcessError as e:
+            LOGGER.error(f"Failed to install MEGAcmd: {e.stdout}\n{e.stderr}")
+            raise Exception("Failed to install MEGAcmd dependencies")
         except Exception as e:
             LOGGER.error(f"Failed to install MEGAcmd: {e}")
             raise Exception("Failed to install MEGAcmd dependencies")
