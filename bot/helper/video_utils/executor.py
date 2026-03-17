@@ -542,7 +542,8 @@ class VidEcxecutor(FFProgress):
             for video_file in vid_list:
                 if await aiopath.exists(video_file):
                     self.size += await get_path_size(video_file)
-                    list_files.append(f"file '{ospath.abspath(video_file)}'")
+                    safe_path = ospath.abspath(video_file).replace("'", r"\'")
+                    list_files.append(f"file '{safe_path}'")
                     self._files.append(video_file)
 
         self.outfile = self._up_path
@@ -612,9 +613,19 @@ class VidEcxecutor(FFProgress):
 
             self.outfile = ospath.join(self.path, self.name)
             streams = (await get_metavideo(main_video))[0]
-            audio_track = len([1+i for i in range(len(streams)) if streams[i]['codec_type'] == 'audio'])
-            cmd.extend((f'-disposition:s:a:{audio_track if audio_track == 0 else audio_track+1}', 'default', '-map', '0:s:?', '-c:v', 'copy', '-c:a', 'copy', '-c:s', 'copy', self.outfile, '-y'))
+            audio_track = len([1+i for i in range(len(streams)) if streams[i].get('codec_type') == 'audio'])
+            new_track_idx = audio_track if audio_track == 0 else audio_track + 1
+            cmd.extend((f'-disposition:a:{new_track_idx}', 'default', '-map',
+                        '0:s:?', '-c:v', 'copy', '-c:a', 'copy', '-c:s',
+                        'copy', self.outfile, '-y'))
             await self._run_cmd(cmd, 'direct')
+
+            if vid_list:
+                await gather(*[clean_target(v) for v in vid_list])
+                vid_dir = ospath.join('vid_vid', str(self.listener.mid))
+                if await aiopath.exists(vid_dir):
+                    await clean_target(vid_dir)
+
             if self.is_cancel:
                 return
 
@@ -663,7 +674,10 @@ class VidEcxecutor(FFProgress):
                 boldstyle = ',Bold=1' if kwargs.get('boldstyle') else ''
                 quality = f',scale={self._qual[kwargs["quality"]]}:-2' if kwargs.get('quality') else ''
 
-                cmd.append(f"subtitles='{self._files[1]}':force_style='FontName={fontname},Shadow=1.5{fontsize}{fontcolour}{boldstyle}'{quality},unsharp,eq=contrast=1.07")
+                sub_file = self._files[1].replace("\\", "\\\\").replace(":", "\\:")
+                cmd.append(f"subtitles='{sub_file}':force_style='FontName="
+                           f"{fontname},Shadow=1.5{fontsize}{fontcolour}"
+                           f"{boldstyle}'{quality},unsharp,eq=contrast=1.07")
 
                 if config_dict['VIDTOOLS_FAST_MODE']:
                     cmd.extend(('-preset', config_dict['LIB264_PRESET'], '-c:v', 'libx264', '-crf', '24'))
