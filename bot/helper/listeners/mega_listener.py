@@ -120,7 +120,6 @@ class MegaAppListener:
             return
         LOGGER.info("MEGAcmd not found, installing on the fly...")
         script = '''
-        set -e
         . /etc/os-release
         ARCH=$(dpkg --print-architecture)
         if [ "$NAME" = "Ubuntu" ]; then
@@ -139,15 +138,13 @@ grep -oP 'megacmd_[^"]*\\.deb' | head -n 1)
         fi
         wget -qO megacmd.deb \
 "https://mega.nz/linux/repo/${OS_URL}/${ARCH}/${DEB_NAME}"
-        apt-get install -y ./megacmd.deb > apt.log 2>&1 || \
-        (apt-get install -f -y >> apt.log 2>&1 && \
-        apt-get install -y ./megacmd.deb >> apt.log 2>&1)
+        apt-get install -y ./megacmd.deb || \
+        (apt-get install -f -y && apt-get install -y ./megacmd.deb)
+        rm -f megacmd.deb
         if ! command -v mega-get &> /dev/null; then
-            echo "MEGAcmd installation failed. APT Logs:"
-            cat apt.log
+            echo "MEGAcmd is not installed properly."
             exit 1
         fi
-        rm -f megacmd.deb apt.log
         '''
         try:
             py_subprocess.run(
