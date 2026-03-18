@@ -566,9 +566,13 @@ class VidEcxecutor(FFProgress):
                 await f.write('\n'.join(list_files))
 
             self.outfile = ospath.join(base_dir, self.name)
-            cmd = [FFMPEG_NAME, '-ignore_unknown', '-f', 'concat', '-safe', '0', '-i', input_file, '-map', '0', '-c', 'copy', self.outfile, '-y']
+            temp_outfile = ospath.join(base_dir, f"temp_{self.name}")
+            cmd = [FFMPEG_NAME, '-ignore_unknown', '-f', 'concat', '-safe', '0', '-i', input_file, '-map', '0', '-c', 'copy', temp_outfile, '-y']
             await self._run_cmd(cmd, 'direct')
             await clean_target(input_file)
+
+            if not self.is_cancel and await aiopath.exists(temp_outfile):
+                await move(temp_outfile, self.outfile)
 
             # Clean up user-sent videos after merge
             if vid_list:
@@ -634,13 +638,17 @@ class VidEcxecutor(FFProgress):
 
             base_dir = self.path if self._is_dir else ospath.dirname(self.path)
             self.outfile = ospath.join(base_dir, self.name)
+            temp_outfile = ospath.join(base_dir, f"temp_{self.name}")
             streams = (await get_metavideo(main_video))[0]
             audio_track = len([1+i for i in range(len(streams)) if streams[i].get('codec_type') == 'audio'])
             new_track_idx = audio_track if audio_track == 0 else audio_track + 1
             cmd.extend((f'-disposition:a:{new_track_idx}', 'default', '-map',
                         '0:s:?', '-c:v', 'copy', '-c:a', 'copy', '-c:s',
-                        'copy', self.outfile, '-y'))
+                        'copy', temp_outfile, '-y'))
             await self._run_cmd(cmd, 'direct')
+
+            if not self.is_cancel and await aiopath.exists(temp_outfile):
+                await move(temp_outfile, self.outfile)
 
             if vid_list:
                 await gather(*[clean_target(v) for v in vid_list])
@@ -698,6 +706,7 @@ class VidEcxecutor(FFProgress):
             self.size += size
             cmd = [FFMPEG_NAME, '-hide_banner', '-ignore_unknown', '-y']
             self.outfile, status = ospath.join(base_dir, self.name), 'direct'
+            temp_outfile = ospath.join(base_dir, f"temp_{self.name}")
             if kwargs.get('hardsub'):
                 self.path, status = self._files[0], 'prog'
                 cmd.extend(('-i', self.path, '-vf'))
@@ -719,15 +728,18 @@ class VidEcxecutor(FFProgress):
                     cmd.extend(('-preset', config_dict['LIB265_PRESET'], '-c:v', 'libx265', '-pix_fmt', 'yuv420p10le', '-crf', '24',
                                 '-profile:v', 'main10', '-x265-params', 'no-info=1', '-bsf:v', 'filter_units=remove_types=6'))
                     extra = ['-c:a', 'aac', '-b:a', '160k', '-map', '0:1']
-                cmd.extend(['-map', '0:v:0?', '-map', '-0:s'] + extra + [self.outfile])
+                cmd.extend(['-map', '0:v:0?', '-map', '-0:s'] + extra + [temp_outfile])
             else:
                 for i in self._files:
                     cmd.extend(('-i', i))
                 cmd.extend(('-map', '0:v:0?', '-map', '0:a:?', '-map', '0:s:?'))
                 for j in range(1, (len(self._files))):
                     cmd.extend(('-map', f'{j}:s'))
-                cmd.extend(('-c:v', 'copy', '-c:a', 'copy', '-c:s', 'srt', self.outfile))
+                cmd.extend(('-c:v', 'copy', '-c:a', 'copy', '-c:s', 'srt', temp_outfile))
             await self._run_cmd(cmd, status)
+
+            if not self.is_cancel and await aiopath.exists(temp_outfile):
+                await move(temp_outfile, self.outfile)
 
             # Clean up user-sent media after merge
             if vid_list := kwargs.get('vid_list'):
