@@ -85,8 +85,15 @@ class SelectMode():
                     aud_count += 1
                 elif f_lower.endswith(('.ass', '.srt', '.vtt')):
                     sub_count += 1
-            msg += f'\n\nSupported: mp4, mkv, avi, webm, mp3, m4a, flac, wav, ass, srt, vtt'
-            msg += f'\nTotal videos :- <b>{vid_count}</b>, Total audio:- <b>{aud_count}</b>, Total subtitle :- <b>{sub_count}</b>'
+            if self.mode == 'vid_vid':
+                msg += f'\n\nSupported: mp4, mkv, avi, webm'
+                msg += f'\nTotal videos :- <b>{vid_count}</b>'
+            elif self.mode == 'vid_aud':
+                msg += f'\n\nSupported: mp4, mkv, avi, webm, mp3, m4a, flac, wav'
+                msg += f'\nTotal videos :- <b>{vid_count}</b>, Total audio:- <b>{aud_count}</b>'
+            else:
+                msg += f'\n\nSupported: mp4, mkv, avi, webm, ass, srt, vtt'
+                msg += f'\nTotal videos :- <b>{vid_count}</b>, Total subtitle :- <b>{sub_count}</b>'
 
         if self.mode in ('vid_sub', 'watermark'):
             hardsub = self.extra_data.get('hardsub')
