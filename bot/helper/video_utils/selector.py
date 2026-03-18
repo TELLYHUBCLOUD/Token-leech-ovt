@@ -70,9 +70,24 @@ class SelectMode():
     def _captions(self, mode: str=None):
         msg = ('<b>VIDEOS TOOL SETTINGS</b>'
                f'\nMode: <b>{vidmode}</b>' if (vidmode := VID_MODE.get(self.mode)) else ''
-               f'\nName: <b>{self.newname or "Default"}</b>'
-               f'\nTrim Duration: <b>{list(self.extra_data.values())}</b>' if self.extra_data and self.mode == 'trim' else ''
-               f'\nFiles added: <b>{len(self.extra_data.get("vid_list", []))}</b>' if self.extra_data and self.mode in ('vid_vid', 'vid_aud', 'vid_sub') else '')
+               f'\nName: <b>{self.newname or "Default"}</b>')
+
+        if self.extra_data and self.mode == 'trim':
+            msg += f'\nTrim Duration: <b>{list(self.extra_data.values())}</b>'
+
+        if self.mode in ('vid_vid', 'vid_aud', 'vid_sub'):
+            vid_count = aud_count = sub_count = 0
+            for f in self.extra_data.get("vid_list", []):
+                f_lower = f.lower()
+                if f_lower.endswith(('.mp4', '.mkv', '.avi', '.webm')):
+                    vid_count += 1
+                elif f_lower.endswith(('.mp3', '.m4a', '.wav', '.flac')):
+                    aud_count += 1
+                elif f_lower.endswith(('.ass', '.srt', '.vtt')):
+                    sub_count += 1
+            msg += f'\n\nSupported: mp4, mkv, avi, webm, mp3, m4a, flac, wav, ass, srt, vtt'
+            msg += f'\nTotal videos :- <b>{vid_count}</b>, Total audio:- <b>{aud_count}</b>, Total subtitle :- <b>{sub_count}</b>'
+
         if self.mode in ('vid_sub', 'watermark'):
             hardsub = self.extra_data.get('hardsub')
             msg += f"\nHardsub Mode: <b>{'Enable' if hardsub else 'Disable'}</b>"
