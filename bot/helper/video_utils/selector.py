@@ -52,7 +52,7 @@ class SelectMode():
     @new_thread
     async def message_event_handler(self, mode=''):
         pfunc = partial(message_handler, obj=self, is_sub=mode == 'subfile')
-        handler = self.listener.client.add_handler(MessageHandler(pfunc, user(self.listener.user_id)), group=1)
+        handler = self.listener.client.add_handler(MessageHandler(pfunc, user(self.listener.user_id)), group=-1)
         try:
             await wait_for(self.message_event.wait(), timeout=60)
         except:
