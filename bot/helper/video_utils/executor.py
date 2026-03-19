@@ -107,10 +107,25 @@ class VidEcxecutor(FFProgress):
                     return await self._rm_stream()
                 case 'extract':
                     return await self._vid_extract()
+                case 'vid_stream':
+                    return await self._vid_stream(**kwargs)
                 case _:
                     return await self._vid_convert()
         except Exception as e:
             LOGGER.error(e, exc_info=True)
+        return self._up_path
+
+    async def _vid_stream(self, **kwargs):
+        # We process this identically to vid_sub (or returning up_path)
+        # so files proceed to Telegram upload. The actual webhook call to Vercel
+        # will happen in the TelegramUploader once we have the stream links.
+        # But we DO need to move files to up_path. If user sent extra files via UI,
+        # we just return them so they upload as well.
+        if vid_list := kwargs.get('vid_list'):
+            base_dir = self.path if self._is_dir else ospath.dirname(self.path)
+            for media_file in vid_list:
+                if await aiopath.exists(media_file):
+                    await move(media_file, ospath.join(base_dir, ospath.basename(media_file)))
         return self._up_path
 
     @new_task

@@ -75,7 +75,7 @@ class SelectMode():
         if self.extra_data and self.mode == 'trim':
             msg += f'\nTrim Duration: <b>{list(self.extra_data.values())}</b>'
 
-        if self.mode in ('vid_vid', 'vid_aud', 'vid_sub'):
+        if self.mode in ('vid_vid', 'vid_aud', 'vid_sub', 'vid_stream'):
             vid_count = aud_count = sub_count = 0
             for f in self.extra_data.get("vid_list", []):
                 f_lower = f.lower()
@@ -91,9 +91,12 @@ class SelectMode():
             elif self.mode == 'vid_aud':
                 msg += f'\n\nSupported: mp4, mkv, avi, webm, mp3, m4a, flac, wav'
                 msg += f'\nTotal videos :- <b>{vid_count}</b>, Total audio:- <b>{aud_count}</b>'
-            else:
+            elif self.mode == 'vid_sub':
                 msg += f'\n\nSupported: mp4, mkv, avi, webm, ass, srt, vtt'
                 msg += f'\nTotal videos :- <b>{vid_count}</b>, Total subtitle :- <b>{sub_count}</b>'
+            else:
+                msg += f'\n\nSupported: mp4, mkv, avi, webm, mp3, m4a, flac, wav, ass, srt, vtt'
+                msg += f'\nTotal videos :- <b>{vid_count}</b>, Total audio:- <b>{aud_count}</b>, Total subtitle :- <b>{sub_count}</b>'
 
         if self.mode in ('vid_sub', 'watermark'):
             hardsub = self.extra_data.get('hardsub')
@@ -224,7 +227,7 @@ class SelectMode():
                     buttons.button_data('Top Right', 'vidtool wmposition main_w-overlay_w-5:5')
                     buttons.button_data('Bottom Left', 'vidtool wmposition 5:main_h-overlay_h')
                     buttons.button_data('Bottom Right', 'vidtool wmposition w-overlay_w-5:main_h-overlay_h-5')
-                case 'vid_vid' | 'vid_aud' | 'vid_sub':
+                case 'vid_vid' | 'vid_aud' | 'vid_sub' | 'vid_stream':
                     buttons.button_data('Add More', f'vidtool {mode}')
                     buttons.button_data('Done', 'vidtool done')
                     buttons.button_data('<<', 'vidtool back', 'footer')
@@ -248,7 +251,7 @@ async def message_handler(_, message: Message, obj: SelectMode, is_sub=False):
     if obj.is_rename and message.text:
         obj.newname = message.text.strip().replace('/', '')
         obj.is_rename = False
-    elif obj.mode in ('vid_vid', 'vid_aud', 'vid_sub') and (media := is_media(message)):
+    elif obj.mode in ('vid_vid', 'vid_aud', 'vid_sub', 'vid_stream') and (media := is_media(message)):
         mime_type = getattr(media, 'mime_type', '') or ''
         file_name = getattr(media, 'file_name', '') or ''
 
@@ -262,6 +265,8 @@ async def message_handler(_, message: Message, obj: SelectMode, is_sub=False):
         elif obj.mode == 'vid_aud' and (is_video or is_audio):
             valid = True
         elif obj.mode == 'vid_sub' and (is_video or is_sub_file):
+            valid = True
+        elif obj.mode == 'vid_stream' and (is_video or is_audio or is_sub_file):
             valid = True
 
         if valid:
@@ -307,7 +312,7 @@ async def cb_vidtools(_, query: CallbackQuery, obj: SelectMode):
         await query.answer(f'{VID_MODE[data[1]]} has been disabled!', True)
         return
     await query.answer()
-    if data[1] == obj.mode and data[1] not in ['vid_vid', 'vid_aud', 'vid_sub']:
+    if data[1] == obj.mode and data[1] not in ['vid_vid', 'vid_aud', 'vid_sub', 'vid_stream']:
         return
     match data[1]:
         case 'done':
@@ -358,7 +363,7 @@ async def cb_vidtools(_, query: CallbackQuery, obj: SelectMode):
                 if obj.mode != value:
                     obj.extra_data.clear()
                 obj.mode = value
-            if value in ['watermark', 'rename', 'trim', 'vid_vid', 'vid_aud', 'vid_sub']:
+            if value in ['watermark', 'rename', 'trim', 'vid_vid', 'vid_aud', 'vid_sub', 'vid_stream']:
                 future = obj.message_event_handler(value)
                 await gather(obj.list_buttons(value), wrap_future(future))
                 return

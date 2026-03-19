@@ -420,9 +420,52 @@ class TgUploader:
             self._buttons.button_link('Media Info', media_result)
         if config_dict['SAVE_MESSAGE'] and self._listener.isSuperChat:
             self._buttons.button_data('Save Message', 'save', 'footer')
-        for mode, link in zip(['Stream', 'Download'], await gen_link(self._send_msg)):
+
+        stream_dl_links = await gen_link(self._send_msg)
+        for mode, link in zip(['Stream', 'Download'], stream_dl_links):
             if link:
                 self._buttons.button_link(mode, await sync_to_async(short_url, link, self._listener.user_id), 'header')
+
+        # Vercel stream player webhook intercept
+        if self._listener.vidMode and self._listener.vidMode[0] == 'vid_stream':
+            if stream_dl_links[0] and config_dict['VERCEL_URL'] and config_dict['VERCEL_API']:
+                try:
+                    import json
+                    import base64
+                    import aiohttp
+
+                    # 1. Base64 payload encoding for fallback URLs
+                    payload = {
+                        "video_url": stream_dl_links[1] or stream_dl_links[0], # Download link preferred
+                        "title": self._send_msg.caption.split('\n')[0] if self._send_msg.caption else "Video Stream",
+                        "poster_url": "" # Thumbnails generated natively by video player
+                    }
+                    json_str = json.dumps(payload, separators=(',', ':'))
+                    base64_data = base64.b64encode(json_str.encode('utf-8')).decode('utf-8')
+
+                    # 2. Vercel Player links fallback
+                    vercel_watch = f"{config_dict['VERCEL_URL'].rstrip('/')}/watch?data={base64_data}"
+                    vercel_dl = f"{config_dict['VERCEL_URL'].rstrip('/')}/download?data={base64_data}"
+
+                    # 3. Call REST API /api/v1/generate if needed
+                    api_url = f"{config_dict['VERCEL_URL'].rstrip('/')}/api/v1/generate"
+                    headers = {
+                        "Content-Type": "application/json",
+                        "Authorization": f"Bearer {config_dict['VERCEL_API']}"
+                    }
+                    async with aiohttp.ClientSession() as session:
+                        async with session.post(api_url, headers=headers, json=payload, timeout=10) as resp:
+                            if resp.status == 200:
+                                api_data = await resp.json()
+                                if api_data.get('success'):
+                                    vercel_watch = api_data['data'].get('watch_url', vercel_watch)
+                                    vercel_dl = api_data['data'].get('download_url', vercel_dl)
+
+                    self._buttons.button_link('▶ Vercel Stream', await sync_to_async(short_url, vercel_watch, self._listener.user_id), 'header')
+                    self._buttons.button_link('⬇ Vercel DL', await sync_to_async(short_url, vercel_dl, self._listener.user_id), 'header')
+                except Exception as e:
+                    LOGGER.error(f"Vercel Stream Generation Error: {e}")
+
         self._send_msg = await bot.get_messages(self._send_msg.chat.id, self._send_msg.id)
         if (buttons := self._buttons.build_menu(2)) and (cmsg := await self._send_msg.edit_reply_markup(buttons)):
             self._send_msg = cmsg
