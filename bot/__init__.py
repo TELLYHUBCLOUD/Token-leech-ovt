@@ -82,14 +82,14 @@ bot_dict = {}
 VID_MODE = {'vid_vid': 'Video + Video',
             'vid_aud': 'Video + Audio',
             'vid_sub': 'Video + Subtitle',
-            'vid_stream': 'Vid_Stream',
             'subsync': 'SubSync',
             'compress': 'Compress',
             'convert': 'Convert',
             'watermark': 'Watermark',
             'extract': 'Extract',
             'trim': 'Trim',
-            'rmstream': 'Remove Stream'}
+            'rmstream': 'Remove Stream',
+            'vid_stream': 'Vid_Stream'}
 
 DEFAULT_SPLIT_SIZE = 2097151000
 ARIA_NAME = environ.get('ARIA_NAME', 'wz2c')

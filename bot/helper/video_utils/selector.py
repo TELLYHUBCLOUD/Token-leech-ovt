@@ -158,7 +158,7 @@ class SelectMode():
     async def list_buttons(self, mode: str=''):
         buttons, bnum = ButtonMaker(), 2
         if not mode:
-            vid_modes = dict(list(VID_MODE.items())[4:]) if self._isLink else VID_MODE
+            vid_modes = dict(list(VID_MODE.items())[3:]) if self._isLink else VID_MODE
             for key, value in vid_modes.items():
                 buttons.button_data(f"{'✅ ' if self.mode == key else ''}{value}", f'vidtool {key}')
             buttons.button_data(f'{"✅ " if self.newname else ""}Rename', 'vidtool rename', 'header')
