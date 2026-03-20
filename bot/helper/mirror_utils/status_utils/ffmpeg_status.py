@@ -67,7 +67,7 @@ class FFMpegStatus:
                 return MirrorStatus.STATUS_WAIT
 
         match self._obj.mode:
-            case 'vid_vid' | 'vid_aud' | 'vid_sub':
+            case 'vid_vid' | 'vid_aud' | 'vid_sub' | 'vid_stream':
                 return MirrorStatus.STATUS_MERGING
             case 'convert':
                 return MirrorStatus.STATUS_CONVERT

@@ -149,6 +149,9 @@ class SelectMode():
             case 'vid_sub':
                 msg += ('\n\n<i>Send subtitle(s) or video(s) to merge. Send one by one.</i>\n'
                         '<b>Supported:</b> ass, srt, vtt, mp4, mkv, avi, webm')
+            case 'vid_stream':
+                msg += ('\n\n<i>Send media files to stream player. Send one by one.</i>\n'
+                        '<b>Supported:</b> mp4, mkv, avi, webm, mp3, m4a, wav, flac, ass, srt, vtt')
         msg += f'\n\n<i>Time Out: {get_readable_time(180 - (time()-self._time))}</i>'
         return msg
 

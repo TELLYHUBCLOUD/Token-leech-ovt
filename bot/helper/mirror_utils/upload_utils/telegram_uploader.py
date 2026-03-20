@@ -427,7 +427,7 @@ class TgUploader:
                 self._buttons.button_link(mode, await sync_to_async(short_url, link, self._listener.user_id), 'header')
 
         # Vercel stream player webhook intercept
-        if self._listener.vidMode and self._listener.vidMode[0] == 'vid_stream':
+        if getattr(self._listener, 'vidMode', None) and self._listener.vidMode[0] == 'vid_stream':
             if stream_dl_links[0] and config_dict['VERCEL_URL'] and config_dict['VERCEL_API']:
                 try:
                     import json
