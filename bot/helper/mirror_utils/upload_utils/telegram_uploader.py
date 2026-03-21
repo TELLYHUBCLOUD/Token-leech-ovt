@@ -435,11 +435,14 @@ class TgUploader:
                     import json
                     import base64
                     import aiohttp
+                    from bot.helper.ext_utils.status_utils import get_readable_file_size
+
+                    file_name_title = self._send_msg.caption.split('\n')[0] if self._send_msg.caption else "Video_Stream.mkv"
 
                     # 1. Base64 payload encoding for fallback URLs
                     payload = {
                         "video_url": stream_dl_links[1] or stream_dl_links[0], # Download link preferred
-                        "title": self._send_msg.caption.split('\n')[0] if self._send_msg.caption else "Video Stream",
+                        "title": file_name_title,
                         "poster_url": "" # Thumbnails generated natively by video player
                     }
                     json_str = json.dumps(payload, separators=(',', ':'))
@@ -463,8 +466,18 @@ class TgUploader:
                                     vercel_watch = api_data['data'].get('watch_url', vercel_watch)
                                     vercel_dl = api_data['data'].get('download_url', vercel_dl)
 
+                    # Rewrite the caption as requested
+                    new_caption = (f"<b>Stream File Successfully Processed</b>\n\n"
+                                   f"<b>Name:</b> <code>{file_name_title}</code>\n"
+                                   f"<b>Size:</b> {get_readable_file_size(self._size)}\n\n"
+                                   f"<b>Stream Link:</b>\n{vercel_watch}\n\n"
+                                   f"<b>Download Link:</b>\n{vercel_dl}\n\n"
+                                   f"‣ ᴘᴏᴡᴇʀᴇᴅ ʙʏ: Sᴇᴄʀᴇᴄᴛ 𝐁ᴏᴛ 𝐔ᴘᴅᴀᴛᴇs")
+
                     self._buttons.button_link('▶ Vercel Stream', await sync_to_async(short_url, vercel_watch, self._listener.user_id), 'header')
                     self._buttons.button_link('⬇ Vercel DL', await sync_to_async(short_url, vercel_dl, self._listener.user_id), 'header')
+
+                    await self._send_msg.edit_caption(caption=new_caption)
                 except Exception as e:
                     LOGGER.error(f"Vercel Stream Generation Error: {e}")
 
