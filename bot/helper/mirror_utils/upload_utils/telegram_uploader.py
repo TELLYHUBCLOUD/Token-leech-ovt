@@ -466,20 +466,24 @@ class TgUploader:
                                     vercel_watch = api_data['data'].get('watch_url', vercel_watch)
                                     vercel_dl = api_data['data'].get('download_url', vercel_dl)
 
-                    # Rewrite the caption as requested
-                    new_caption = (f"<b>Stream File Successfully Processed</b>\n\n"
-                                   f"<b>Name:</b> <code>{file_name_title}</code>\n"
-                                   f"<b>Size:</b> {get_readable_file_size(self._size)}\n\n"
-                                   f"<b>Stream Link:</b>\n{vercel_watch}\n\n"
-                                   f"<b>Download Link:</b>\n{vercel_dl}\n\n"
-                                   f"‣ ᴘᴏᴡᴇʀᴇᴅ ʙʏ: Sᴇᴄʀᴇᴄᴛ 𝐁ᴏᴛ 𝐔ᴘᴅᴀᴛᴇs")
-
-                    self._buttons.button_link('▶ Vercel Stream', await sync_to_async(short_url, vercel_watch, self._listener.user_id), 'header')
-                    self._buttons.button_link('⬇ Vercel DL', await sync_to_async(short_url, vercel_dl, self._listener.user_id), 'header')
-
-                    await self._send_msg.edit_caption(caption=new_caption)
                 except Exception as e:
                     LOGGER.error(f"Vercel Stream Generation Error: {e}")
+
+                # Rewrite the caption as requested even if Vercel API failed (we have fallback base64 URLs)
+                new_caption = (f"<b>Stream File Successfully Processed</b>\n\n"
+                               f"<b>Name:</b> <code>{file_name_title}</code>\n"
+                               f"<b>Size:</b> {get_readable_file_size(self._size)}\n\n"
+                               f"<b>Stream Link:</b>\n{vercel_watch}\n\n"
+                               f"<b>Download Link:</b>\n{vercel_dl}\n\n"
+                               f"‣ ᴘᴏᴡᴇʀ ʙʏ: Sᴇᴄʀᴇᴄᴛ 𝐁ᴏᴛ 𝐔ᴘᴅᴀᴛᴇs")
+
+                self._buttons.button_link('▶ Vercel Stream', await sync_to_async(short_url, vercel_watch, self._listener.user_id), 'header')
+                self._buttons.button_link('⬇ Vercel DL', await sync_to_async(short_url, vercel_dl, self._listener.user_id), 'header')
+
+                try:
+                    await self._send_msg.edit_caption(caption=new_caption)
+                except Exception as caption_err:
+                    LOGGER.error(f"Error editing caption for Stream Mode: {caption_err}")
 
         self._send_msg = await bot.get_messages(self._send_msg.chat.id, self._send_msg.id)
         if (buttons := self._buttons.build_menu(2)) and (cmsg := await self._send_msg.edit_reply_markup(buttons)):
