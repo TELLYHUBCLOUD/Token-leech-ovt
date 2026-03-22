@@ -96,8 +96,8 @@ class SelectMode():
                 msg += f'\nTotal videos :- <b>{vid_count}</b>, Total subtitle :- <b>{sub_count}</b>'
 
         if self.mode == 'vid_stream':
-            stream_status = self.extra_data.get('is_stream', False)
-            msg += f"\n\nVid_Stream Mode: <b>{'Enable' if stream_status else 'Disable'}</b>"
+            stream_status = self.extra_data.get('is_stream', True)
+            msg += f"\n\nVid_Stream Mode: <b>{'On' if stream_status else 'Off'}</b>"
 
         if self.mode in ('vid_sub', 'watermark'):
             hardsub = self.extra_data.get('hardsub')
@@ -229,7 +229,7 @@ class SelectMode():
                     buttons.button_data('Bottom Left', 'vidtool wmposition 5:main_h-overlay_h')
                     buttons.button_data('Bottom Right', 'vidtool wmposition w-overlay_w-5:main_h-overlay_h-5')
                 case 'vid_stream':
-                    stream_status = self.extra_data.get('is_stream', False)
+                    stream_status = self.extra_data.get('is_stream', True)
                     buttons.button_data(f"{'✅ ' if stream_status else ''}On", f'vidtool stream_toggle 1')
                     buttons.button_data(f"{'✅ ' if not stream_status else ''}Off", f'vidtool stream_toggle 0')
                     buttons.button_data('<<', 'vidtool back', 'footer')
