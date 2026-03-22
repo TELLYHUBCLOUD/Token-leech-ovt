@@ -427,7 +427,7 @@ class TgUploader:
                 self._buttons.button_link(mode, await sync_to_async(short_url, link, self._listener.user_id), 'header')
 
         # Vercel stream player webhook intercept
-        if getattr(self._listener, 'vidMode', None) and self._listener.vidMode[0] == 'vid_stream':
+        if getattr(self._listener, 'vidMode', None) and self._listener.vidMode[0] == 'vid_stream' and self._listener.vidMode[2].get('is_stream', False):
             # Even if stream_dl_links[0] (the bot's native stream) isn't present,
             # as long as we have a download link, Vercel can stream it.
             if config_dict['VERCEL_URL'] and config_dict['VERCEL_API'] and (stream_dl_links[0] or stream_dl_links[1]):
