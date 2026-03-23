@@ -38,7 +38,7 @@ async def check_limits_size(listener, size, playlist=False, play_count=False):
                                                         config_dict['ZIP_UNZIP_LIMIT'], config_dict['LEECH_LIMIT'], config_dict['STORAGE_THRESHOLD'])
     if config_dict['PREMIUM_MODE'] and not is_premium_user(listener.user_id):
         mdl = torddl = zuzdl = leechdl = config_dict['NONPREMIUM_LIMIT']
-        megadl = min(megadl, mdl)
+        megadl = min(megadl, mdl) if megadl else mdl
         max_pyt = 10
 
     arch = any([listener.compress, listener.isLeech, listener.extract])
