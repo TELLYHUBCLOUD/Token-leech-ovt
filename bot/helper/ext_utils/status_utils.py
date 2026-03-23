@@ -177,9 +177,16 @@ def get_readable_message(sid: int, is_user: bool, page_no: int=1, status : str='
             msg += f'  ⊶  <b>ᴇʟᴀᴘꜱᴇᴅ</b>   ﹕ {task.elapsed() or "~"}\n'
             msg += f'  ⊶  <b>ᴍᴏᴅᴇ</b>      ﹕ PyroMulti v2.2.11\n'
 
-        user_name = f'<a href="https://t.me/{task.listener.message.from_user.username}">{task.listener.message.from_user.first_name}</a>' if task.listener.message.from_user.username else task.listener.message.from_user.first_name
+        from_user = task.listener.message.from_user
+        if from_user:
+            user_name = f'<a href="https://t.me/{from_user.username}">{from_user.first_name}</a>' if from_user.username else from_user.first_name
+            user_id = from_user.id
+        else:
+            user_name = "Anonymous"
+            user_id = task.listener.message.sender_chat.id if task.listener.message.sender_chat else "Unknown"
+
         msg += f'╼─────────────────────────────────────╾\n'
-        msg += f'  👤  <b>𝗜𝗱𝗲𝗻𝘁𝗶𝘁𝘆 ﹕</b> {user_name} | ID: {task.listener.message.from_user.id} ⊘ <b>𝗔𝗰𝘁𝗶𝗼𝗻 ﹕</b> /{BotCommands.CancelTaskCommand} {task.gid()}\n'
+        msg += f'  👤  <b>𝗜𝗱𝗲𝗻𝘁𝗶𝘁𝘆 ﹕</b> {user_name} | ID: {user_id} ⊘ <b>𝗔𝗰𝘁𝗶𝗼𝗻 ﹕</b> /{BotCommands.CancelTaskCommand} {task.gid()}\n'
         msg += f'╼─────────────────────────────────────╾\n\n'
 
     if not msg:
