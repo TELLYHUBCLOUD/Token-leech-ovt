@@ -34,7 +34,7 @@ START = 0
 STATE = 'view'
 handler_dict = {}
 unauth_config = ['TELEGRAM_HASH', 'TELEGRAM_API', 'ARGO_TOKEN', 'ENABLE_FASTDL', 'CLOUD_LINK_FILTERS', 'OWNER_ID',
-                 'DATABASE_URL', 'HEROKU_APP_NAME', 'HEROKU_API_KEY', 'UPSTREAM_REPO', 'UPSTREAM_BRANCH', 'CLOUD_LINK']
+                 'DATABASE_URL', 'HEROKU_APP_NAME', 'HEROKU_API_KEY', 'UPSTREAM_REPO', 'UPSTREAM_BRANCH', 'CLOUD_LINK', 'VERCEL_API']
 
 
 async def get_buttons(key=None, edit_type=None):
