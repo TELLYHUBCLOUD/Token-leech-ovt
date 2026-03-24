@@ -93,7 +93,45 @@ async def removeSudo(_, message: Message):
     await auto_delete_message(message, msg)
 
 
+@new_task
+async def addPremiumGC(_, message: Message):
+    msg = message.text.split()
+    if len(msg) > 1:
+        id_ = int(msg[1].strip())
+    else:
+        id_ = message.chat.id
+
+    if id_ in user_data and user_data.get(id_, {}).get('is_premium'):
+        msg = 'Chat is already Premium GC!'
+    else:
+        await update_user_ldata(id_, 'is_premium', True)
+        msg = 'Chat successfully upgraded to Premium GC!'
+
+    msg = await sendMessage(msg, message)
+    await auto_delete_message(message, msg)
+
+
+@new_task
+async def rmPremiumGC(_, message: Message):
+    msg = message.text.split()
+    if len(msg) > 1:
+        id_ = int(msg[1].strip())
+    else:
+        id_ = message.chat.id
+
+    if id_ not in user_data or user_data.get(id_, {}).get('is_premium'):
+        await update_user_ldata(id_, 'is_premium', False)
+        msg = 'Chat successfully downgraded from Premium GC.'
+    else:
+        msg = 'Chat is already not a Premium GC!'
+
+    msg = await sendMessage(msg, message)
+    await auto_delete_message(message, msg)
+
+
 bot.add_handler(MessageHandler(authorize, filters=command(BotCommands.AuthorizeCommand) & CustomFilters.sudo))
 bot.add_handler(MessageHandler(unauthorize, filters=command(BotCommands.UnAuthorizeCommand) & CustomFilters.sudo))
 bot.add_handler(MessageHandler(addSudo, filters=command(BotCommands.AddSudoCommand) & CustomFilters.owner))
 bot.add_handler(MessageHandler(removeSudo, filters=command(BotCommands.RmSudoCommand) & CustomFilters.owner))
+bot.add_handler(MessageHandler(addPremiumGC, filters=command(BotCommands.PremiumGCCommand) & CustomFilters.owner))
+bot.add_handler(MessageHandler(rmPremiumGC, filters=command(BotCommands.RmPremiumGCCommand) & CustomFilters.owner))

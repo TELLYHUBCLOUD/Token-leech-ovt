@@ -300,7 +300,7 @@ class Misc(MiscTool):
 
     @new_task
     async def newEvent(self):
-        if config_dict['PREMIUM_MODE'] and not is_premium_user(self.message.from_user.id if self.message.from_user else self.message.sender_chat.id):
+        if config_dict['PREMIUM_MODE'] and not is_premium_user(self.message.from_user.id if self.message.from_user else self.message.sender_chat.id, self.message.chat.id):
             await sendMessage('This feature only for <b>Premium User</b>!', self.message)
             return
         if not self.reply_to and len(self.message.command) == 1:

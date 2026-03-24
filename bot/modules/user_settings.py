@@ -434,7 +434,7 @@ async def edit_user_settings(client: Client, query: CallbackQuery):
     user_dict = user_data.get(user_id, {})
     premi_features = ['caption', 'dump_ch', 'gdrive_id', 'media_group', 'prename', 'sufname', 'remname', 'metadata', 'session_string', 'enable_pm', 'enable_ss']
     pre_data = data[3] if data[2] == 'setdata' else data[2]
-    if config_dict['PREMIUM_MODE'] and not is_premium_user(user_id) and pre_data in premi_features:
+    if config_dict['PREMIUM_MODE'] and not is_premium_user(user_id, getattr(query.message.chat, 'id', None)) and pre_data in premi_features:
         await query.answer('Upss, Premium User Required!', True)
         is_modified = False
         for key in premi_features:

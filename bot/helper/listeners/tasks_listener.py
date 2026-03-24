@@ -412,7 +412,7 @@ class TaskListener(TaskConfig):
                         non_queued_up.remove(self.mid)
                 await start_from_queued()
                 return
-        if config_dict['DAILY_MODE'] and not self.isClone and not is_premium_user(self.user_id):
+        if config_dict['DAILY_MODE'] and not self.isClone and not is_premium_user(self.user_id, self.message.chat.id):
             await UserDaily(self.user_id).set_daily_limit(daily_size)
         await clean_download(self.dir)
         async with task_dict_lock:

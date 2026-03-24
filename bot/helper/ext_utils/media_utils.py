@@ -203,7 +203,7 @@ async def split_file(path, size, dirpath, split_size, listener, obj, start_time=
         dirpath = ospath.join(dirpath, 'splited_files_mltb')
         await makedirs(dirpath, exist_ok=True)
     leech_split_size = config_dict['LEECH_SPLIT_SIZE']
-    if config_dict['PREMIUM_MODE'] and not is_premium_user(listener.user_id):
+    if config_dict['PREMIUM_MODE'] and not is_premium_user(listener.user_id, getattr(listener.message.chat, 'id', None)):
         leech_split_size = DEFAULT_SPLIT_SIZE
     parts = -(-size // leech_split_size)
     if listener.equalSplits and not inLoop:

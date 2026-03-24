@@ -92,7 +92,9 @@ def presuf_remname_name(user_dict: int, name: str):
     return name
 
 
-def is_premium_user(user_id: int):
+def is_premium_user(user_id: int, chat_id: int = None):
+    if chat_id and user_data.get(chat_id, {}).get('is_premium'):
+        return True
     user_dict = user_data.get(user_id, {})
     return user_id == config_dict['OWNER_ID'] or (config_dict['PREMIUM_MODE'] and user_dict.get('is_premium')) or user_dict.get('is_sudo')
 
