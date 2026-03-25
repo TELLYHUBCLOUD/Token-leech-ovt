@@ -121,7 +121,11 @@ async def _qb_listener():
                         else:
                             await sync_to_async(client.torrents_reannounce, torrent_hashes=tor_info.hash)
                     elif state == 'downloading':
-                        QbTorrents[tag]['stalled_time'] = time()
+                        if tor_info.dlspeed == 0:
+                            if TORRENT_TIMEOUT and time() - QbTorrents[tag]['stalled_time'] >= TORRENT_TIMEOUT:
+                                _onDownloadError('Dead torrent!', tor_info)
+                        else:
+                            QbTorrents[tag]['stalled_time'] = time()
                         if STOP_DUPLICATE and not QbTorrents[tag]['stop_dup_check']:
                             QbTorrents[tag]['stop_dup_check'] = True
                             _stop_duplicate(tor_info)
