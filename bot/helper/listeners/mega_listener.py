@@ -117,7 +117,7 @@ class MegaAppListener:
 
     def _install_megacmd(self):
         if shutil.which('mega-get'):
-            return
+            return True
         LOGGER.info("MEGAcmd not found, installing on the fly...")
         script = '''
         . /etc/os-release
@@ -129,7 +129,11 @@ class MegaAppListener:
         else
             OS_URL="xUbuntu_22.04"
         fi
-        apt-get update -y || true
+        SUDO=""
+        if command -v sudo >/dev/null 2>&1; then
+            SUDO="sudo"
+        fi
+        $SUDO apt-get update -y || true
         DEB_NAME=$(curl -s "https://mega.nz/linux/repo/${OS_URL}/${ARCH}/" | \
 grep -oP 'megacmd_[^"]*\\.deb' | head -n 1)
         if [ -z "$DEB_NAME" ]; then
@@ -138,8 +142,8 @@ grep -oP 'megacmd_[^"]*\\.deb' | head -n 1)
         fi
         wget -qO megacmd.deb \
 "https://mega.nz/linux/repo/${OS_URL}/${ARCH}/${DEB_NAME}"
-        apt-get install -y ./megacmd.deb || \
-        (apt-get install -f -y && apt-get install -y ./megacmd.deb)
+        $SUDO DEBIAN_FRONTEND=noninteractive apt-get install -y ./megacmd.deb || \
+        ($SUDO DEBIAN_FRONTEND=noninteractive apt-get install -f -y && $SUDO DEBIAN_FRONTEND=noninteractive apt-get install -y ./megacmd.deb)
         rm -f megacmd.deb
         if ! command -v mega-get &> /dev/null; then
             echo "MEGAcmd is not installed properly."
@@ -153,16 +157,18 @@ grep -oP 'megacmd_[^"]*\\.deb' | head -n 1)
                 capture_output=True,
                 text=True
             )
+            return True
         except py_subprocess.CalledProcessError as e:
             LOGGER.error(f"Failed to install MEGAcmd: {e.stdout}\n{e.stderr}")
-            raise Exception("Failed to install MEGAcmd dependencies")
+            return False
         except Exception as e:
             LOGGER.error(f"Failed to install MEGAcmd: {e}")
-            raise Exception("Failed to install MEGAcmd dependencies")
+            return False
 
     async def download(self, path):
         try:
-            self._install_megacmd()
+            if not self._install_megacmd():
+                return False
             await self.login()
             await self.create_temp_path()
             await self.import_link()
