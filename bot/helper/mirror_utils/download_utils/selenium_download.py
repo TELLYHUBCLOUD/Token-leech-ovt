@@ -17,6 +17,7 @@ class SeleniumDownloadStatus:
         self._size = size
         self._gid = gid
         self._listener = listener
+        self.listener = listener
         self._downloaded = 0
         self._speed = 0
         self.message = listener.message
