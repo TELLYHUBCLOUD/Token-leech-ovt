@@ -1,112 +1,119 @@
-# LeechxTool
+<h1 align="center">
+  <img src="https://files.catbox.moe/58gf6k.jpg" alt="LeechxTool Logo" width="200"><br>
+  <b>LeechxTool</b>
+</h1>
 
-A powerful Telegram bot to mirror and leech files from various sources to Telegram, Google Drive, and Rclone supported cloud storages.
+<p align="center">
+  <b>A highly advanced, feature-rich Telegram Bot to Mirror & Leech files from Torrents, Direct Links, Google Drive, Rclone, YouTube, and Mega.</b><br>
+  <i>Built with headless Cloudflare Bypassing, Vercel Streaming, and Native FFMPEG Merging.</i>
+</p>
 
-## Features
+---
 
-- **Mirroring**: Download from direct links, Torrents, YouTube, Mega, Google Drive, and more to Google Drive or Rclone.
-- **Leeching**: Upload downloaded files directly to Telegram.
-- **Clone**: Clone files between Google Drive, Rclone, and other supported cloud storages.
-- **Yt-Dlp Support**: Download videos from YouTube and supported sites with custom quality selection.
-- **JDownloader Support**: Download files using JDownloader.
-- **Torrents**: Support for public and private trackers, magnet links, and torrent files.
-- **Search**: Built-in torrent search feature.
-- **RSS Feed**: Automated downloading via RSS feeds.
-- **User Management**: Authorize specific users or chats.
-- **Bot Management**: Extensive control over bot settings via commands.
+## 🌟 Key Features
 
-## Deployment
+### 🚀 Core Downloading & Uploading
+*   **Leech & Mirror:** Download from virtually anywhere (Direct Links, Torrents, Magnets, Mega.nz, YouTube) and upload natively to Telegram (`/leech`), Google Drive (`/mirror`), or any `Rclone` supported cloud storage provider.
+*   **Yt-Dlp Integration:** Native support for downloading playlists, channels, or videos from thousands of supported websites with full quality selection.
+*   **qBittorrent & Aria2c:** Highly optimized multi-threaded downloading for maximum speed, backed by built-in Torrent Searching.
+*   **MEGAcmd Integration:** Native, ultra-fast `mega.nz` folder and file downloading using official MEGAcmd binaries, avoiding the slow, broken python API wrappers.
 
-### Docker (Recommended)
+### 🎭 Custom Bypass & Scraping
+*   **Headless Selenium Bypasser:** Built-in Chrome WebDriver integration perfectly configured to intercept and bypass **Cloudflare-protected anime sites** (e.g., `rareanimes.app`, `codedew.com`, `swift.multiquality.click`). Send a link, and the bot will autonomously resolve the iframe and download the streams concurrently.
+*   **Direct Link Generators:** Automatic bypass support for dozens of URL shorteners and ad-walls.
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/YourUsername/LeechxTool.git
-    cd LeechxTool
-    ```
+### 🎬 Interactive Video Tools (`-vt`)
+*   **Multi-File Merging:** Send the `-vt` flag to interactively add multiple files. Combine multiple `Video + Audio` tracks or Hardsub `Video + Subtitles` (.srt/.ass) directly inside Telegram.
+*   **Editing:** Extract Audio, Trim specific durations, Compress videos, Sync Subtitles, and Watermark media seamlessly via `ffmpeg`.
+*   **Custom Thumbnails:** Upload any photo with `-s thumb` or via `/uset` to set a persistent custom thumbnail for all your Telegram uploads.
 
-2.  **Build the Docker image:**
-    ```bash
-    docker build -t leechxtool .
-    ```
+### 🌐 Vercel Web Stream Player (`vid_stream`)
+*   **Native Vercel Integration:** Toggle `Vid_Stream` to ON in your video tools menu. The bot will automatically encrypt your file URLs into a secure Base64 JSON payload, ping your custom Vercel REST API (`VERCEL_URL`), and generate beautiful **Stream** and **Download** web player links embedded perfectly in the final Telegram upload message.
 
-3.  **Run the container:**
-    ```bash
-    docker run -d \
-      -e BOT_TOKEN="your_bot_token" \
-      -e OWNER_ID="your_owner_id" \
-      -e TELEGRAM_API="your_api_id" \
-      -e TELEGRAM_HASH="your_api_hash" \
-      -v $(pwd)/config.env:/usr/src/app/config.env \
-      -v $(pwd)/accounts:/usr/src/app/accounts \
-      leechxtool
-    ```
+### 👑 Premium User & Group Chat Management
+*   **Premium Groups:** Grant premium access to entire groups using `/premiumgc` and revoke it with `/offpremiumgc`. All members in a premium chat automatically bypass the bot's size and daily download limits.
+*   **User Controls:** Grant individual premium status, ban users, and authorize specific chats dynamically without restarting the bot.
 
-### VPS / Local Machine
+---
 
-1.  **Install Dependencies:**
-    -   Python 3.9+
-    -   FFmpeg
-    -   Aria2
-    -   qBittorrent-nox
-    -   7-Zip
+## 🛠️ Deployment
 
-2.  **Install Python Packages:**
-    ```bash
-    pip3 install -r requirements.txt
-    ```
+### 🐳 Docker (Highly Recommended)
 
-3.  **Configure:**
-    -   Copy `config.env.sample` (if available) to `config.env` and fill in the values.
-    -   Or simply create a `config.env` file.
+The bot utilizes a custom base image (`mysterysd/wzmlx:v3`) which comes pre-installed with crucial binaries like `mega-get`, `ffmpeg`, `aria2c`, and Chrome for headless Selenium.
 
-4.  **Run:**
-    ```bash
-    bash start.sh
-    ```
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/YourUsername/LeechxTool.git
+   cd LeechxTool
+   ```
+2. **Fill in the Configuration:**
+   Rename `Config.env` (if sample) or edit the existing one with your API credentials.
+3. **Deploy via Docker Compose:**
+   ```bash
+   docker-compose up -d
+   ```
 
-## Configuration (`config.env`)
+### ☁️ VPS / Heroku (Manual Installation)
+
+1. **Install System Dependencies:**
+   - Python 3.10+
+   - FFmpeg, Aria2, qBittorrent-nox
+   - Google Chrome (Stable) & ChromeDriver
+2. **Install Python Packages:**
+   ```bash
+   pip3 install -r requirements.txt
+   ```
+3. **Run the Bot:**
+   ```bash
+   bash start.sh
+   ```
+   *(Note: The `start.sh` file includes dynamic pulling from the UPSTREAM_REPO to ensure your code is always up to date.)*
+
+---
+
+## ⚙️ Essential Configuration (`Config.env`)
 
 | Variable | Description |
 | :--- | :--- |
-| `BOT_TOKEN` | Your Telegram Bot Token. |
+| `BOT_TOKEN` | Your Telegram Bot Token from [@BotFather](https://t.me/BotFather). |
 | `OWNER_ID` | Your Telegram User ID. |
-| `TELEGRAM_API` | Your Telegram API ID. |
-| `TELEGRAM_HASH` | Your Telegram API Hash. |
-| `DATABASE_URL` | MongoDB Connection String. |
-| `DOWNLOAD_DIR` | Directory for downloads (default: `/usr/src/app/downloads/`). |
-| `GDRIVE_ID` | Google Drive Folder ID for uploads. |
-| `RCLONE_PATH` | Rclone remote path (e.g., `remote:path`). |
-| `DEFAULT_UPLOAD` | `gd` (Google Drive) or `rc` (Rclone). |
-| `UPSTREAM_REPO` | Git URL for bot updates. |
-| `FSUB_CHANNEL_ID` | Channel ID for forced subscription. |
+| `TELEGRAM_API` | Your Telegram API ID from `my.telegram.org`. |
+| `TELEGRAM_HASH` | Your Telegram API Hash from `my.telegram.org`. |
+| `DATABASE_URL` | MongoDB Connection String (Required for saving settings/users). |
+| `VERCEL_URL` | Your Vercel Web Streaming Player URL (e.g., `https://vercel-steam-mod.vercel.app`). |
+| `VERCEL_API` | Your secret Vercel Bearer token. |
+| `MEGA_LIMIT` | Limit in GBs for downloading from Mega.nz. |
+| `NONPREMIUM_LIMIT`| Default GB limit for standard users (Premium users bypass this). |
+| `UPSTREAM_REPO` | Git URL for automatic bot updates on reboot. |
 
-*See `config.env` for the full list of optional configurations.*
+*(All variables can be securely viewed and edited live in Telegram via the `/botset` command by the Owner).*
 
-## Commands
+---
 
-| Command | Description |
-| :--- | :--- |
-| `/start` | Start the bot. |
-| `/mirror`, `/m` | Mirror file/link to Cloud. |
-| `/leech`, `/l` | Leech file/link to Telegram. |
-| `/ytdl`, `/y` | Download via Yt-Dlp to Cloud. |
-| `/ytdlleech`, `/yl` | Download via Yt-Dlp to Telegram. |
-| `/clone` | Clone Google Drive/Rclone files. |
-| `/status` | Show status of current tasks. |
-| `/cancel` | Cancel a task. |
-| `/list` | Search files in Drive/Rclone. |
-| `/search` | Search torrents. |
-| `/authorize` | Authorize a chat or user. |
-| `/unauthorize` | Revoke authorization. |
-| `/users` | List authorized users. |
-| `/log` | Get log file. |
-| `/stats` | Show system and bot stats. |
-| `/restart` | Restart the bot. |
-| `/help` | Show help message. |
+## 📜 Command Reference
 
-*Add your `CMD_SUFFIX` (if set) to these commands.*
+| Command | Alias | Description |
+| :--- | :--- | :--- |
+| `/leech` | `/l` | Leech file/link natively to Telegram. |
+| `/mirror` | `/m` | Mirror file/link to Google Drive / Rclone. |
+| `/ytdl` | `/y` | Download via Yt-Dlp to Cloud. |
+| `/ytdlleech` | `/yl` | Download via Yt-Dlp to Telegram. |
+| `/clone` | | Clone Google Drive/Rclone files. |
+| `/bypass` | | Bypass Cloudflare or Ad-links & start download immediately. |
+| `/status` | | Show live ASCII status of active downloads. |
+| `/cancel` | | Cancel a specific running task. |
+| `/usersettings` | `/uset`, `/us` | User specific settings (Thumbnail, Prefix, Daily limits). |
+| `/botsettings` | `/bset`, `/bs` | Owner settings to change `Config.env` variables dynamically. |
+| `/premiumgc` | `/primiumgc` | Grant a group chat premium limits bypass. |
+| `/offpremiumgc` | `/offprimiumgc` | Revoke a group chat's premium status. |
+| `/stats` | | Show Server CPU, RAM, Disk, and Bot uptime statistics. |
+| `/restart` | | Restart the bot and apply UPSTREAM updates. |
 
-## Credits
+*(To use video tools, simply reply to a message or attach the link with the `-vt` argument: e.g., `/l <link> -vt`)*
 
--   Based on various open-source leech bots.
+---
+
+<p align="center">
+  <b>‣ ᴘᴏᴡᴇʀᴇᴅ ʙʏ: Sᴇᴄʀᴇᴄᴛ 𝐁ᴏᴛ 𝐔ᴘᴅᴀᴛᴇs</b>
+</p>
