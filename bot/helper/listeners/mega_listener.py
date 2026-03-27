@@ -173,16 +173,20 @@ grep -oP 'megacmd_[^"]*\\.deb' | head -n 1)
             await self.create_temp_path()
             await self.import_link()
             target_node = await self.get_metadata_and_target()
+        except Exception as setup_err:
+            LOGGER.error(f"Mega Setup Error: {setup_err}")
+            return False
 
+        try:
             msg, button = await stop_duplicate_check(self.listener)
             if msg:
                 await self.listener.onDownloadError(msg, button)
-                return
+                return True
 
             limit_exc = await check_limits_size(self.listener, self.size)
             if limit_exc:
                 await self.listener.onDownloadError(limit_exc)
-                return
+                return True
 
             t_mid = self.listener.mid
             added_to_queue, event = await check_running_tasks(t_mid)
@@ -197,7 +201,7 @@ grep -oP 'megacmd_[^"]*\\.deb' | head -n 1)
                     await sendStatusMessage(self.listener.message)
                 await event.wait()
                 if getattr(self.listener, 'is_cancelled', False):
-                    return
+                    return True
 
             self.mega_status = MegaDownloadStatus(
                 self.listener, self, self.gid, MirrorStatus.STATUS_DOWNLOADING
@@ -253,17 +257,20 @@ grep -oP 'megacmd_[^"]*\\.deb' | head -n 1)
             if self.process.returncode == 0:
                 await self.cleanup()
                 await self.listener.onDownloadComplete()
+                return True
             else:
                 if getattr(self.listener, 'is_cancelled', False):
-                    return
+                    return True
                 if self.process.returncode != -9:
                     err_msg = f"MegaCMD exited with {self.process.returncode}"
                     await self.listener.onDownloadError(err_msg)
+                return True
         except Exception as e:
             if getattr(self.listener, 'is_cancelled', False):
-                return
+                return True
             LOGGER.error(f"Mega Download Logic Error: {e}")
             await self.listener.onDownloadError(str(e))
+            return True
         finally:
             await self.cleanup()
 
