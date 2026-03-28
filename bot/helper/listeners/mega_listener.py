@@ -142,8 +142,9 @@ grep -oP 'megacmd_[^"]*\\.deb' | head -n 1)
         fi
         wget -qO megacmd.deb \
 "https://mega.nz/linux/repo/${OS_URL}/${ARCH}/${DEB_NAME}"
-        $SUDO DEBIAN_FRONTEND=noninteractive apt-get install -y ./megacmd.deb || \
-        ($SUDO DEBIAN_FRONTEND=noninteractive apt-get install -f -y && $SUDO DEBIAN_FRONTEND=noninteractive apt-get install -y ./megacmd.deb)
+        export DEBIAN_FRONTEND=noninteractive
+        $SUDO apt-get install -y ./megacmd.deb || \
+        ($SUDO apt-get install -f -y && $SUDO apt-get install -y ./megacmd.deb)
         rm -f megacmd.deb
         if ! command -v mega-get &> /dev/null; then
             echo "MEGAcmd is not installed properly."
