@@ -1,16 +1,17 @@
+import asyncio
+import os
+import shutil
+import re
 from time import time
 from secrets import token_hex
-from aiofiles.os import makedirs
+from aiofiles.os import makedirs, path as aiopath
 from asyncio import create_subprocess_exec, wait_for
-from asyncio import subprocess as asynciosubprocess
-import shutil
+from asyncio.subprocess import PIPE, STDOUT
 import subprocess as py_subprocess
-from re import search as re_search
-from contextlib import suppress
 
 from bot import LOGGER, task_dict, task_dict_lock, config_dict
 from bot.helper.ext_utils.status_utils import MirrorStatus
-from bot.helper.ext_utils.bot_utils import cmd_exec
+from bot.helper.ext_utils.bot_utils import cmd_exec, sync_to_async
 from bot.helper.ext_utils.task_manager import (
     check_running_tasks,
     stop_duplicate_check,
@@ -20,20 +21,13 @@ from bot.helper.mirror_utils.status_utils.mega_status import MegaDownloadStatus
 from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
 from bot.helper.telegram_helper.message_utils import sendStatusMessage
 
+try:
+    from mega import Mega
+except ImportError:
+    Mega = None
+
+
 mega_tasks = {}
-
-
-async def mega_cleanup():
-    if not mega_tasks:
-        return
-    LOGGER.info("Running Mega Cleanup...")
-    for path in list(mega_tasks.values()):
-        try:
-            await cmd_exec(["mega-rm", "-r", "-f", path])
-        except Exception as e:
-            LOGGER.error(f"Mega Restart Cleanup Failed for {path}: {e}")
-    mega_tasks.clear()
-
 
 class MegaAppListener:
     def __init__(self, listener):
@@ -43,137 +37,76 @@ class MegaAppListener:
         self.mega_status = None
         self.name = ""
         self.size = 0
-        self.temp_path = f"/wzml_{self.gid}"
-        self.mega_tags = set()
+        self.temp_path = f"/usr/src/app/downloads/{self.gid}"
         self._is_cleaned = False
         self._last_time = time()
         self._val_last = 0
         mega_tasks[self.gid] = self.temp_path
 
-    async def login(self):
-        MEGA_EMAIL = config_dict.get('MEGA_EMAIL', '')
-        MEGA_PASSWORD = config_dict.get('MEGA_PASSWORD', '')
-        if MEGA_EMAIL and MEGA_PASSWORD:
-            try:
-                await cmd_exec(["mega-login", MEGA_EMAIL, MEGA_PASSWORD])
-            except Exception as e:
-                raise Exception(f"Mega Login Failed: {e}")
-        else:
-            pass
-
-    async def create_temp_path(self):
-        await cmd_exec(["mega-mkdir", self.temp_path])
-
-    async def import_link(self):
-        stdout, stderr, ret = await cmd_exec(
-            ["mega-import", self.listener.link, self.temp_path]
-        )
-        if ret != 0:
-            raise Exception(f"Mega Import Failed: {stderr}")
-
-    async def get_metadata_and_target(self):
-        stdout, _, ret = await cmd_exec(["mega-ls", "-l", self.temp_path])
-        if ret != 0 or not stdout:
-            raise Exception("Mega Metadata Failed")
-
-        lines = [line for line in stdout.strip().split("\n") if line.strip()]
-        if not lines:
-            raise Exception("Mega Import: No items found")
-
-        for line in lines:
-            match = re_search(
-                r"\s(\d+|-)\s+\S+\s+\d{2}:\d{2}:\d{2}\s+(.*)$", line
-            )
-            if match:
-                size_str = match.group(1)
-                self.name = match.group(2).strip()
-                self.size = int(size_str) if size_str.isdigit() else 0
-                break
-
-        if not self.name:
-            s_stdout, _, _ = await cmd_exec(["mega-ls", self.temp_path])
-            if s_stdout:
-                self.name = s_stdout.strip().split("\n")[0].strip()
-
-        if not self.name:
-            self.name = self.listener.name or f"MEGA_Download_{self.gid}"
-
-        self.listener.name = self.name
-        self.listener.size = self.size
-
-        return f"{self.temp_path}/{self.name}"
-
     async def cleanup(self):
-        if self._is_cleaned:
+        if getattr(self.listener, 'is_cancelled', False):
             return
         self._is_cleaned = True
         try:
-            LOGGER.info(f"Cleaning up Mega Task: {self.name}")
-            await cmd_exec(["mega-rm", "-r", "-f", self.temp_path])
             if self.gid in mega_tasks:
                 del mega_tasks[self.gid]
         except Exception as e:
-            LOGGER.error(f"Mega Cleanup Failed: {e}")
+            pass
 
-    def _install_megacmd(self):
-        if shutil.which('mega-get'):
+    def _install_megatools(self):
+        if shutil.which('megadl'):
             return True
-        LOGGER.info("MEGAcmd not found, installing on the fly...")
+        LOGGER.info("megatools not found, installing on the fly...")
         script = '''
-        . /etc/os-release
-        ARCH=$(dpkg --print-architecture)
-        if [ "$NAME" = "Ubuntu" ]; then
-            OS_URL="xUbuntu_${VERSION_ID}"
-        elif [ "$NAME" = "Debian GNU/Linux" ]; then
-            OS_URL="Debian_${VERSION_ID}"
-        else
-            OS_URL="xUbuntu_22.04"
-        fi
         SUDO=""
         if command -v sudo >/dev/null 2>&1; then
             SUDO="sudo"
         fi
-        $SUDO apt-get update -y || true
-        DEB_NAME=$(curl -s "https://mega.nz/linux/repo/${OS_URL}/${ARCH}/" | \
-grep -oP 'megacmd_[^"]*\\.deb' | head -n 1)
-        if [ -z "$DEB_NAME" ]; then
-            echo "Failed to find megacmd package for ${OS_URL}/${ARCH}"
-            exit 1
-        fi
-        wget -qO megacmd.deb \
-"https://mega.nz/linux/repo/${OS_URL}/${ARCH}/${DEB_NAME}"
         export DEBIAN_FRONTEND=noninteractive
-        $SUDO apt-get install -y ./megacmd.deb || \
-        ($SUDO apt-get install -f -y && $SUDO apt-get install -y ./megacmd.deb)
-        rm -f megacmd.deb
-        if ! command -v mega-get &> /dev/null; then
-            echo "MEGAcmd is not installed properly."
-            exit 1
-        fi
+        $SUDO apt-get update -y || true
+        $SUDO apt-get install -y megatools
         '''
         try:
-            py_subprocess.run(
-                ["bash", "-c", script],
-                check=True,
-                capture_output=True,
-                text=True
-            )
+            py_subprocess.run(["bash", "-c", script], check=True, capture_output=True, text=True)
             return True
-        except py_subprocess.CalledProcessError as e:
-            LOGGER.error(f"Failed to install MEGAcmd: {e.stdout}\n{e.stderr}")
-            return False
         except Exception as e:
-            LOGGER.error(f"Failed to install MEGAcmd: {e}")
+            LOGGER.error(f"Failed to install megatools: {e}")
+            return False
+
+    async def get_metadata(self):
+        if not Mega:
+            LOGGER.warning("mega.py module missing. Cannot fetch metadata!")
+            return False
+
+        try:
+            mega = Mega()
+            # Attempt anonymous login to bypass rate limits or just anonymous state
+            m = await sync_to_async(mega.login)
+
+            # Fetch metadata
+            info = await sync_to_async(m.get_public_url_info, self.listener.link)
+            if not info or 'size' not in info:
+                LOGGER.error("Failed to extract Mega metadata.")
+                return False
+
+            self.size = info.get('size', 0)
+            self.name = info.get('name', 'Mega_Download')
+            self.listener.size = self.size
+            self.listener.name = self.name
+            return True
+        except Exception as e:
+            LOGGER.error(f"Mega Metadata Error: {e}")
             return False
 
     async def download(self, path):
         try:
-            if not self._install_megacmd():
+            if not self._install_megatools():
                 return False
-            await self.login()
-            await self.create_temp_path()
-            await self.import_link()
-            target_node = await self.get_metadata_and_target()
+
+            if not await self.get_metadata():
+                # If metadata fails (e.g. folder links via mega.py failing), fallback to JDownloader
+                return False
+
         except Exception as setup_err:
             LOGGER.error(f"Mega Setup Error: {setup_err}")
             return False
@@ -219,41 +152,45 @@ grep -oP 'megacmd_[^"]*\\.deb' | head -n 1)
                     await sendStatusMessage(self.listener.message)
 
             await makedirs(path, exist_ok=True)
+            self.temp_path = path
 
-            command = ["mega-get", target_node, path]
+            # Download using megadl
+            command = ["megadl", "--path", path, self.listener.link]
 
             self.process = await create_subprocess_exec(
                 *command,
-                stdout=asynciosubprocess.PIPE,
-                stderr=asynciosubprocess.STDOUT,
+                stdout=PIPE,
+                stderr=STDOUT,
             )
 
-            while True:
-                if getattr(self.listener, 'is_cancelled', False):
-                    break
-
-                try:
-                    line_bytes = await wait_for(
-                        self.process.stdout.readuntil(b"\r"), timeout=5
-                    )
-                    line = line_bytes.decode().strip()
-                    if not line:
-                        if self.process.returncode is not None:
-                            break
-                        continue
-                    self._parse_progress(line)
-                except TimeoutError:
-                    await self.update_daemon_status()
-                    if self.process.returncode is not None:
+            # Polling task for disk size instead of regex output parsing
+            async def track_disk_progress():
+                while self.process and self.process.returncode is None:
+                    if getattr(self.listener, 'is_cancelled', False):
                         break
-                    continue
-                except Exception:
-                    break
+                    try:
+                        total_bytes = 0
+                        for dirpath, _, filenames in os.walk(path):
+                            for f in filenames:
+                                fp = os.path.join(dirpath, f)
+                                if not os.path.islink(fp):
+                                    total_bytes += os.path.getsize(fp)
 
-                if self.process.returncode is not None:
-                    break
+                        self.mega_status._downloaded_bytes = total_bytes
+                        cur_time = time()
+                        if cur_time - self._last_time >= 2:
+                            speed = int((total_bytes - self._val_last) / (cur_time - self._last_time))
+                            # Prevent negative spikes
+                            self.mega_status._speed = speed if speed > 0 else 0
+                            self._val_last = total_bytes
+                            self._last_time = cur_time
+                    except Exception:
+                        pass
+                    await asyncio.sleep(2)
 
+            progress_task = asyncio.create_task(track_disk_progress())
             await self.process.wait()
+            progress_task.cancel()
 
             if self.process.returncode == 0:
                 await self.cleanup()
@@ -262,9 +199,17 @@ grep -oP 'megacmd_[^"]*\\.deb' | head -n 1)
             else:
                 if getattr(self.listener, 'is_cancelled', False):
                     return True
+
+                # Check output for errors
+                stdout_data = ""
+                if self.process.stdout:
+                    stdout_data = (await self.process.stdout.read()).decode().strip()
+
                 if self.process.returncode != -9:
-                    err_msg = f"MegaCMD exited with {self.process.returncode}"
-                    await self.listener.onDownloadError(err_msg)
+                    err_msg = f"megadl failed with exit code {self.process.returncode}\n{stdout_data}"
+                    LOGGER.error(err_msg)
+                    # Force JDownloader fallback for failed execution by returning False to mega_download.py
+                    return False
                 return True
         except Exception as e:
             if getattr(self.listener, 'is_cancelled', False):
@@ -275,74 +220,12 @@ grep -oP 'megacmd_[^"]*\\.deb' | head -n 1)
         finally:
             await self.cleanup()
 
-    def _parse_progress(self, line):
-        muls = {"K": 1024, "M": 1024**2, "G": 1024**3, "T": 1024**4, "B": 1}
-        match = re_search(r"\(([\d\.]+)/([\d\.]+)\s([KMGT]?B)", line)
-        if match:
-            dl_val = float(match.group(1))
-            unit_char = (match.group(3))[0].upper()
-            mult = muls.get(unit_char, 1)
-            self.mega_status._downloaded_bytes = int(dl_val * mult)
-
-            if not self.listener.size or self.listener.size == 0:
-                total_val = float(match.group(2))
-                self.mega_status._size = int(total_val * mult)
-                self.listener.size = self.mega_status._size
-
-            cur_time = time()
-            if cur_time - self._last_time >= 2:
-                self.mega_status._speed = int(
-                    (self.mega_status._downloaded_bytes - self._val_last)
-                    / (cur_time - self._last_time)
-                )
-                self._last_time = cur_time
-                self._val_last = self.mega_status._downloaded_bytes
-
-    async def update_daemon_status(self):
-        try:
-            cmd = ["mega-transfers", "--col-separator=|"]
-            stdout, _, _ = await cmd_exec(cmd)
-            for line in stdout.splitlines():
-                if self.gid in line:
-                    parts = line.split("|")
-                    if len(parts) > 1:
-                        self.mega_tags.add(parts[1].strip())
-                        if len(parts) > 4:
-                            status = parts[5].strip().capitalize()
-                            dl = MirrorStatus.STATUS_DOWNLOADING
-                            if self.mega_status._status != dl:
-                                self.mega_status._status = status
-        except Exception:
-            pass
-
     async def cancel_task(self):
-        LOGGER.info(f"Cancelling {self.mega_status._status}: {self.name}")
         self.listener.is_cancelled = True
-
-        await self.update_daemon_status()
-
-        for tag in self.mega_tags:
-            try:
-                LOGGER.info(f"Cancelling Transfer Tag: {tag}")
-                await cmd_exec(["mega-transfers", "-c", tag])
-            except Exception as e:
-                err = f"Mega Transfer Cancel Failed for {tag}: {e}"
-                LOGGER.error(err)
-
-        try:
-            stdout, _, _ = await cmd_exec(["mega-transfers"])
-            for line in stdout.splitlines():
-                if self.gid in line:
-                    parts = line.split()
-                    if len(parts) > 1:
-                        tag = parts[1]
-                        if tag not in self.mega_tags:
-                            LOGGER.info(f"Cancelling Straggler Tag: {tag}")
-                            await cmd_exec(["mega-transfers", "-c", tag])
-                        await cmd_exec(["mega-transfers", "-c", tag])
-        except Exception as e:
-            LOGGER.error(f"Mega Final Cancel Check Failed: {e}")
-
         if self.process is not None:
-            with suppress(Exception):
+            try:
                 self.process.kill()
+            except Exception:
+                pass
+        LOGGER.info(f"Mega Task Cancelled: {self.name}")
+        await self.cleanup()
