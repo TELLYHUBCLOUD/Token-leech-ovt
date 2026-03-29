@@ -60,15 +60,24 @@ class MegaAppListener:
         script = '''
         SUDO=""
         if command -v sudo >/dev/null 2>&1; then
-            SUDO="sudo"
+            if sudo -n true 2>/dev/null; then
+                SUDO="sudo"
+            fi
         fi
         export DEBIAN_FRONTEND=noninteractive
         $SUDO apt-get update -y || true
         $SUDO apt-get install -y megatools
         '''
         try:
+            if os.geteuid() != 0 and not shutil.which('sudo'):
+                # Bypass script execution safely if absolutely zero privileges are available
+                LOGGER.info("Insufficient permissions to run apt-get. Falling back to native PyMega...")
+                return False
             py_subprocess.run(["bash", "-c", script], check=True, capture_output=True, text=True)
             return True
+        except py_subprocess.CalledProcessError as e:
+            LOGGER.error(f"Failed to install megatools: {e.stdout}\n{e.stderr}")
+            return False
         except Exception as e:
             LOGGER.error(f"Failed to install megatools: {e}")
             return False
@@ -99,9 +108,11 @@ class MegaAppListener:
             return False
 
     async def download(self, path):
+        self.use_mega_py = False
         try:
             if not self._install_megatools():
-                return False
+                LOGGER.info("megatools installation failed. Falling back to native mega.py...")
+                self.use_mega_py = True
 
             if not await self.get_metadata():
                 # If metadata fails (e.g. folder links via mega.py failing), fallback to JDownloader
@@ -165,7 +176,9 @@ class MegaAppListener:
 
             # Polling task for disk size instead of regex output parsing
             async def track_disk_progress():
-                while self.process and self.process.returncode is None:
+                while True:
+                    if self.process is not None and self.process.returncode is not None:
+                        break
                     if getattr(self.listener, 'is_cancelled', False):
                         break
                     try:
@@ -187,6 +200,25 @@ class MegaAppListener:
                     except Exception:
                         pass
                     await asyncio.sleep(2)
+
+            if self.use_mega_py:
+                progress_task = asyncio.create_task(track_disk_progress())
+                try:
+                    mega = Mega()
+                    m = await sync_to_async(mega.login)
+                    await sync_to_async(m.download_url, self.listener.link, dest_path=path, dest_filename=self.name)
+                    progress_task.cancel()
+                    if getattr(self.listener, 'is_cancelled', False):
+                        return True
+                    await self.cleanup()
+                    await self.listener.onDownloadComplete()
+                    return True
+                except Exception as py_err:
+                    progress_task.cancel()
+                    if getattr(self.listener, 'is_cancelled', False):
+                        return True
+                    LOGGER.error(f"mega.py download failed: {py_err}")
+                    return False
 
             progress_task = asyncio.create_task(track_disk_progress())
             await self.process.wait()
