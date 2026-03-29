@@ -165,15 +165,6 @@ class MegaAppListener:
             await makedirs(path, exist_ok=True)
             self.temp_path = path
 
-            # Download using megadl
-            command = ["megadl", "--path", path, self.listener.link]
-
-            self.process = await create_subprocess_exec(
-                *command,
-                stdout=PIPE,
-                stderr=STDOUT,
-            )
-
             # Polling task for disk size instead of regex output parsing
             async def track_disk_progress():
                 while True:
@@ -219,6 +210,15 @@ class MegaAppListener:
                         return True
                     LOGGER.error(f"mega.py download failed: {py_err}")
                     return False
+
+            # Download using megadl
+            command = ["megadl", "--path", path, self.listener.link]
+
+            self.process = await create_subprocess_exec(
+                *command,
+                stdout=PIPE,
+                stderr=STDOUT,
+            )
 
             progress_task = asyncio.create_task(track_disk_progress())
             await self.process.wait()
