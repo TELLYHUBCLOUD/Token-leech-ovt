@@ -37,8 +37,8 @@ class FastDL(TaskListener):
 
     @new_task
     async def newEvent(self):
-        if not config_dict['RCLONE_SERVE_URL'] or not await aiopath.exists('rclone.conf') or not config_dict['ENABLE_FASTDL']:
-            await sendMessage('Fast download not available!', self.message)
+        if not config_dict['RCLONE_SERVE_URL'] or not await aiopath.exists('rclone.conf'):
+            await sendMessage('Fast download requires rclone.conf and RCLONE_SERVE_URL configured!', self.message)
             return
 
         text = self.message.text.split('\n')
