@@ -254,7 +254,15 @@ class TgUploader:
                 await clean_target(thumb)
             err_type = 'RPCError: ' if isinstance(err, RPCError) else ''
             LOGGER.error('%s%s. Path: %s', err_type, err, self._up_path)
-            if 'Telegram says: [400' in str(err) and key != 'documents':
+
+            err_str = str(err)
+            if 'CHANNEL_INVALID' in err_str or 'PEER_ID_INVALID' in err_str:
+                if self._client != bot:
+                    LOGGER.error(f'Userbot could not access chat. Falling back to Main Bot... Path: {self._up_path}')
+                    self._client = bot
+                    return await self._upload_file(caption, file, force_document)
+                raise err
+            if 'Telegram says: [400' in err_str and key != 'documents':
                 LOGGER.error('Retrying As Document. Path: %s', self._up_path, exc_info=True)
                 return await self._upload_file(caption, file, True)
             raise err
