@@ -83,9 +83,15 @@ class MegaAppListener:
             return False
 
     async def get_metadata(self):
+        global Mega
         if not Mega:
-            LOGGER.warning("mega.py module missing. Cannot fetch metadata!")
-            return False
+            LOGGER.info("mega.py module missing. Installing on the fly...")
+            try:
+                py_subprocess.run(["pip3", "install", "mega.py", "--upgrade"], check=True, capture_output=True)
+                from mega import Mega
+            except Exception as e:
+                LOGGER.error(f"Failed to install mega.py: {e}")
+                return False
 
         try:
             mega = Mega()
