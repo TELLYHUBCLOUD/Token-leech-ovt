@@ -639,8 +639,11 @@ def addJob():
     scheduler.add_job(rssMonitor, trigger=IntervalTrigger(seconds=config_dict['RSS_DELAY']), id='0', name='RSS', misfire_grace_time=15,
                       max_instances=1, next_run_time=datetime.now()+timedelta(seconds=20), replace_existing=True)
 
+if config_dict.get('RSS_CHAT'):
+    addJob()
+    scheduler.start()
+else:
+    LOGGER.warning('RSS_CHAT not set. RSS Scheduler will not be started automatically.')
 
-addJob()
-scheduler.start()
 bot.add_handler(MessageHandler(getRssMenu, filters=command(BotCommands.RssCommand) & CustomFilters.authorized))
 bot.add_handler(CallbackQueryHandler(rssListener, filters=regex('^rss')))

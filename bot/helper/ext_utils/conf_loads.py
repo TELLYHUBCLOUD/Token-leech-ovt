@@ -707,7 +707,10 @@ async def load_config():
         LOGGER.info('Config update in database!!')
     await gather(server.cleanup(), intialize_userbot(), initiate_search_tools(), start_from_queued(), rclone_serve_booter())
     await start_server()
-    addJob()
+
+    if config_dict.get('RSS_CHAT') and not scheduler.running:
+        addJob()
+        scheduler.start()
 
 
 async def intialize_userbot(check=True):
