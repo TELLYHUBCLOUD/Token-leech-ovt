@@ -83,6 +83,10 @@ class MegaAppListener:
             return False
 
     async def get_metadata(self):
+        if '/folder/' in self.listener.link or '#F!' in self.listener.link:
+            LOGGER.info("Mega folder link detected. Skipping mega.py metadata logic and delegating to JDownloader...")
+            return False
+
         global Mega
         if not Mega:
             LOGGER.info("mega.py module missing. Installing on the fly...")
