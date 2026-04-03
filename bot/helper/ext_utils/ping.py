@@ -11,9 +11,10 @@ async def ping_server(repeat: bool):
         return
     attemp = 1
     while True:
+        if not config_dict.get('PING_URL'):
+            return
         try:
-            if not (url := config_dict['PING_URL']):
-                raise ValueError(f'PING_URL not provided! Retrying in 10 seconds ({attemp}/5).')
+            url = config_dict['PING_URL']
             async with ClientSession(timeout=ClientTimeout(total=10)) as session, session.get(url, ssl=False) as res:
                 if (respon := res.status) != 200:
                     raise ValueError(f'ERROR, got respons {respon}. Retrying in 10 seconds ({attemp}/5).')
