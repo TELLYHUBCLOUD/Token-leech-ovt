@@ -54,8 +54,16 @@ async def clean_download(path):
 
 
 def clean_all():
-    aria2.remove_all(True)
-    get_client().torrents_delete(torrent_hashes='all')
+    try:
+        aria2.remove_all(True)
+    except Exception as e:
+        LOGGER.warning(f"Failed to remove aria2 downloads during cleanup: {e}")
+
+    try:
+        get_client().torrents_delete(torrent_hashes='all')
+    except Exception as e:
+        LOGGER.warning(f"Failed to remove qbittorrent downloads during cleanup: {e}")
+
     CURRENT_DIR = config_dict['DOWNLOAD_DIR']
     async_to_sync(clean_target, CURRENT_DIR)
     if DOWNLOAD_DIR != CURRENT_DIR:

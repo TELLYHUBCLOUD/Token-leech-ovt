@@ -612,7 +612,8 @@ async def user_settings(client, message: Message):
             user_data[user_id] = {}
         user_data[user_id]['thumb'] = path
         if config_dict['DATABASE_URL']:
-            await database.update_user_doc(user_id, 'thumb', path)
+            from bot.helper.ext_utils.db_handler import DbManager
+            await DbManager().update_user_doc(user_id, 'thumb', path)
 
         await editMessage("✅ Custom Thumbnail saved successfully!", dl_msg)
 
