@@ -3,9 +3,9 @@ from secrets import token_hex
 import os
 from bot import LOGGER, task_dict, task_dict_lock
 from bot.helper.ext_utils.bot_utils import sync_to_async
-from bot.helper.ext_utils.status_utils.mega_status import MegaDownloadStatus
-from bot.helper.ext_utils.status_utils.queue_status import QueueStatus
-from bot.helper.mirror_utils.status_utils.base_status import MirrorStatus
+from bot.helper.mirror_utils.status_utils.mega_status import MegaDownloadStatus
+from bot.helper.mirror_utils.status_utils.queue_status import QueueStatus
+from bot.helper.ext_utils.status_utils import MirrorStatus
 from bot.helper.telegram_helper.message_utils import sendStatusMessage
 from bot.helper.ext_utils.task_manager import check_limits_size, check_running_tasks, stop_duplicate_check
 from mega import Mega
