@@ -5,4 +5,11 @@ if ! command -v google-chrome &> /dev/null; then
     apt-get update && apt-get install -y google-chrome-stable
 fi
 
+if ! command -v mega-cmd &> /dev/null; then
+    echo "Installing MEGAcmd..."
+    wget -q https://mega.nz/linux/repo/xUbuntu_22.04/amd64/megacmd-xUbuntu_22.04_amd64.deb
+    apt-get install -y ./megacmd-xUbuntu_22.04_amd64.deb || true
+    rm ./megacmd-xUbuntu_22.04_amd64.deb
+fi
+
 python3 update.py && python3 -m bot

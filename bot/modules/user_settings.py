@@ -768,5 +768,5 @@ from bot import CMD_SUFFIX
 bot.add_handler(MessageHandler(set_premium_users, filters=command(BotCommands.UserSetPremiCommand) & CustomFilters.sudo))
 bot.add_handler(MessageHandler(send_users_settings, filters=command(BotCommands.UsersCommand) & CustomFilters.sudo))
 bot.add_handler(MessageHandler(reset_daily_limit, filters=command(BotCommands.DailyResetCommand) & CustomFilters.sudo))
-bot.add_handler(MessageHandler(user_settings, filters=command([BotCommands.UserSetCommand, f'us{CMD_SUFFIX}'])))
+bot.add_handler(MessageHandler(user_settings, filters=command([BotCommands.UserSetCommand, f'us{CMD_SUFFIX}']) & CustomFilters.authorized))
 bot.add_handler(CallbackQueryHandler(edit_user_settings, filters=regex('^userset')))
