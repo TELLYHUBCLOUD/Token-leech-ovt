@@ -69,6 +69,7 @@ if (UPSTREAM_REPO := environ.get('UPSTREAM_REPO')) and (UPSTREAM_BRANCH := envir
     if update.returncode == 0:
         log_info(f'Successfully updated with latest commit from UPSTREAM_REPO ~ {UPSTREAM_BRANCH.upper()} Branch.')
         log_info('Installing requirements...')
+        srun(['pip3', 'uninstall', 'mega', '-y'])
         srun(['pip3', 'install', '--no-cache-dir', '-r', 'requirements.txt'])
     else:
         log_error('Something went wrong while updating, check UPSTREAM_REPO if valid or not!')

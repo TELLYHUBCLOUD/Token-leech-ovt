@@ -12,4 +12,5 @@ if ! command -v mega-cmd &> /dev/null; then
     rm ./megacmd-xUbuntu_22.04_amd64.deb
 fi
 
+pip3 uninstall -y mega
 python3 update.py && python3 -m bot
