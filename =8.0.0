@@ -1,0 +1,2 @@
+Requirement already satisfied: tenacity in /home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages (5.1.5)
+Requirement already satisfied: six>=1.9.0 in /home/jules/.pyenv/versions/3.12.13/lib/python3.12/site-packages (from tenacity) (1.17.0)

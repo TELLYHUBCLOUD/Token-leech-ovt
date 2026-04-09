@@ -13,4 +13,5 @@ if ! command -v mega-cmd &> /dev/null; then
 fi
 
 pip3 uninstall -y mega
+pip3 install --upgrade tenacity --no-deps
 python3 update.py && python3 -m bot
