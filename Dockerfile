@@ -10,6 +10,10 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
 COPY requirements.txt .
 RUN pip install --upgrade setuptools
 RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip3 uninstall -y mega mega.py || true
+RUN rm -rf /usr/local/lib/python*/dist-packages/mega* || true
+RUN pip3 install mega.py --no-cache-dir
+RUN pip3 install --upgrade tenacity --no-deps
 
 COPY . .
 
