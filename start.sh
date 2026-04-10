@@ -13,6 +13,7 @@ if ! command -v mega-cmd &> /dev/null; then
 fi
 
 pip3 uninstall -y mega mega.py
+rm -rf /usr/local/lib/python*/dist-packages/mega*
 pip3 install mega.py --no-cache-dir
 pip3 install --upgrade tenacity --no-deps
 python3 update.py && python3 -m bot

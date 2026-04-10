@@ -70,6 +70,7 @@ if (UPSTREAM_REPO := environ.get('UPSTREAM_REPO')) and (UPSTREAM_BRANCH := envir
         log_info(f'Successfully updated with latest commit from UPSTREAM_REPO ~ {UPSTREAM_BRANCH.upper()} Branch.')
         log_info('Installing requirements...')
         srun(['pip3', 'uninstall', 'mega', 'mega.py', '-y'])
+        srun(['bash', '-c', 'rm -rf /usr/local/lib/python*/dist-packages/mega*'])
         srun(['pip3', 'install', '--no-cache-dir', '-r', 'requirements.txt'])
         srun(['pip3', 'install', 'mega.py', '--no-cache-dir'])
         srun(['pip3', 'install', '--upgrade', 'tenacity', '--no-deps'])
