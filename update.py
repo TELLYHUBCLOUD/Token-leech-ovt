@@ -72,7 +72,5 @@ if (UPSTREAM_REPO := environ.get('UPSTREAM_REPO')) and (UPSTREAM_BRANCH := envir
         srun(['pip3', 'uninstall', 'mega', 'mega.py', '-y'])
         srun(['bash', '-c', 'rm -rf /usr/local/lib/python*/dist-packages/mega*'])
         srun(['pip3', 'install', '--no-cache-dir', '-r', 'requirements.txt'])
-        srun(['pip3', 'install', 'mega.py', '--no-cache-dir'])
-        srun(['pip3', 'install', '--upgrade', 'tenacity', '--no-deps'])
     else:
         log_error('Something went wrong while updating, check UPSTREAM_REPO if valid or not!')
