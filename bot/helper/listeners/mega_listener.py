@@ -26,7 +26,11 @@ class MegaAppListener:
     async def get_metadata(self):
         try:
             import subprocess
+
+            # Since VPS containers might lack sudo permissions for APT-GET,
+            # we must fallback to JD dynamically if neither mega-get nor megadl is successfully verified inside PATH.
             if not await self._install_megatools():
+                LOGGER.info("megadl missing from PATH. Bypassing metadata.")
                 return False
 
             cmd = ["megadl", "--print-urls", self.listener.link]
@@ -61,7 +65,8 @@ class MegaAppListener:
         import subprocess as py_subprocess
         try:
             py_subprocess.run(["bash", "-c", script], check=False, capture_output=True)
-            return True
+            if shutil.which('megadl'):
+                return True
         except:
             pass
         return False
@@ -81,7 +86,8 @@ class MegaAppListener:
         import subprocess as py_subprocess
         try:
             py_subprocess.run(["bash", "-c", script], check=False, capture_output=True)
-            return True
+            if shutil.which('mega-get'):
+                return True
         except:
             pass
         return False
@@ -89,8 +95,15 @@ class MegaAppListener:
     async def download(self, path):
         await self._install_megacmd()
 
+        # If metadata extraction fails entirely (e.g. megadl is missing due to permission denial), we immediately fallback to JDownloader
         if not await self.get_metadata():
-            await self.listener.onDownloadError("Failed to extract Mega Metadata via CLI.")
+            LOGGER.info("Mega CLI failed or metadata could not be extracted. Delegating direct to JDownloader.")
+            from bot.helper.mirror_utils.download_utils.jd_download import add_jd_download
+            self.listener.isJd = True
+            try:
+                await add_jd_download(self.listener, path)
+            except Exception as e:
+                LOGGER.error(f"Fallback JDownloader failed: {e}")
             return
 
         msg, button = await stop_duplicate_check(self.listener)
