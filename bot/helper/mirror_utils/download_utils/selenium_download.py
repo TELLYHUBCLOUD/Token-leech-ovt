@@ -109,11 +109,17 @@ async def add_selenium_download(listener, path, url):
         }
         options.add_experimental_option("prefs", prefs)
 
+        # Increase connection timeout to avoid crash during long downloads via Chrome
         driver = webdriver.Chrome(options=options)
+        driver.set_page_load_timeout(7200)
 
         try:
             LOGGER.info(f"Selenium opening URL: {url}")
-            driver.get(url)
+            # Use execute_async_script or try-except on timeouts to prevent crash on direct MP4 loads
+            try:
+                driver.get(url)
+            except Exception:
+                pass
             sleep(10)  # wait for redirects and Cloudflare
 
             resolutions = ['360p', '480p', '720p', '1080p']
@@ -140,7 +146,10 @@ async def add_selenium_download(listener, path, url):
                         is_tgt = "razorshell" in src or "multiquality" in src
                         if src and is_tgt:
                             downlead_url = src.replace("/embed/", "/downlead/")
-                            driver.get(downlead_url)
+                            try:
+                                driver.get(downlead_url)
+                            except Exception:
+                                pass
                             sleep(10)
                             extract_links()
                             if found_links:
@@ -172,7 +181,10 @@ async def add_selenium_download(listener, path, url):
                     pass
 
                 initial_files = set(listdir(path))
-                driver.get(download_url)
+                try:
+                    driver.get(download_url)
+                except Exception:
+                    pass
 
                 st_name = f"Video_{res}.mp4"
                 status = SeleniumDownloadStatus(

@@ -92,8 +92,7 @@ class Bypass(TaskListener):
         # If the direct link is a multi-quality site, skip generator and start download directly
         if any(x in self.link for x in ['swift.multiquality.click', 'rareanimes.app', 'codedew.com']):
             await deleteMessage(self.editable)
-            from bot.helper.ext_utils.bot_utils import bot_loop
-            bot_loop.create_task(Mirror(self.client, self.message, isLeech=True).newEvent())
+            await Mirror(self.client, self.message, isLeech=True).newEvent()
             return
 
         try:
