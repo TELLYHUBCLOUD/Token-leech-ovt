@@ -130,8 +130,6 @@ class TaskConfig:
         self.equalSplits = self.user_dict.get('equal_splits') or config_dict['EQUAL_SPLITS'] and 'equal_splits' not in self.user_dict
         async with bot_lock:
             self.maxSplitSize = bot_dict['MAX_SPLIT_SIZE']
-        if config_dict['PREMIUM_MODE'] and not is_premium_user(self.user_id, self.message.chat.id) and self.splitSize > DEFAULT_SPLIT_SIZE:
-            self.splitSize = DEFAULT_SPLIT_SIZE
         self.splitSize = min(self.splitSize, self.maxSplitSize)
 
         if not self.isYtDlp and not self.isJd:

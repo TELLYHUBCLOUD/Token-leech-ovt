@@ -33,8 +33,6 @@ class UseCheck:
             msgs.append(msg)
         if limit and (msg := await self._task_limiter()):
             msgs.append(msg)
-        if forpremi and (msg := self._check_premium()):
-            msgs.append(msg)
         if daily and (msg := await self._daily_limit()):
             msgs.append(msg)
         if ml_chek and (msg := self._check_ml()):
@@ -71,9 +69,6 @@ class UseCheck:
             if mode == 'leech' and self._is_leech:
                 return '⁍ Leech mode has been disabled!'
 
-    def _check_premium(self):
-        if config_dict['PREMIUM_MODE'] and not self.isPremi:
-            return '⁍ Feature only for <b>Premium User</b>!'
 
     async def _daily_limit(self):
         if config_dict['DAILY_MODE'] and not self.isPremi and await UserDaily(self._uid).get_daily_limit():
@@ -81,7 +76,7 @@ class UseCheck:
 
     async def _check_session(self, buttons):
         if SESSION_TIMEOUT := config_dict['SESSION_TIMEOUT']:
-            if config_dict['PREMIUM_MODE'] and self.isPremi or await CustomFilters.sudo('', self._message):
+            if await CustomFilters.sudo('', self._message):
                 return
             user_dict = user_data.get(self._uid, {})
             if not (expire := user_dict.get('session_time')) or time() - expire > SESSION_TIMEOUT:
@@ -93,9 +88,6 @@ class UseCheck:
                 return f'⁍ Session is exipred (renew every {get_readable_time(SESSION_TIMEOUT)}</i>).'
 
     async def _check_limit(self):
-        if config_dict['PREMIUM_MODE'] and self.isPremi and self._user_dict.get('premium_left', 0) - time() <= 0:
-            await gather(update_user_ldata(self._uid, 'is_premium', False), update_user_ldata(self._uid, 'premium_left', 0))
-
         if self._user_dict.get('is_sudo') and 'sudo_left' in self._user_dict and self._user_dict['sudo_left'] - time() <= 0:
             del user_data[self._uid]['sudo_left']
             await update_user_ldata(self._uid, 'is_sudo', False)

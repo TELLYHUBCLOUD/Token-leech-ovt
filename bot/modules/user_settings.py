@@ -111,18 +111,6 @@ async def get_user_settings(from_user, data: str, uset_data: str):
         buttons.button_data('✓ Extensions Filters' if ex_ex else 'Extensions Filters', f'userset {user_id} setdata excluded_extensions')
 
         custom_cap = ' ✓' if user_dict.get('captions') else ' ✘'
-        if config_dict['PREMIUM_MODE']:
-            if (user_premi := is_premium_user(user_id)) and (time_data := user_dict.get('premium_left')):
-                if time_data - time() <= 0:
-                    await gather(update_user_ldata(user_id, 'is_premium', False), update_user_ldata(user_id, 'premium_left', 0))
-                else:
-                    premium_left = f'<b></b>Premium Left: <b>{get_readable_time(time_data - time())}</b>\n'
-            if user_id != config_dict['OWNER_ID']:
-                status_user = '<b></b>Status: <b>PREMIUM</b>\n' if user_premi else '<b></b>Status: <b>NORMAL</b>\n'
-        if config_dict['DAILY_MODE'] and not is_premium_user(user_id):
-            await UserDaily(user_id).get_daily_limit()
-            daily_limit = f'<b></b>Daily Limit: <b>{get_readable_file_size(user_data[user_id]["daily_limit"])}/{config_dict["DAILY_LIMIT_SIZE"]}GB</b>\n'
-            daily_limit += f'<b></b>Reset Time: <b>{get_readable_time(user_data[user_id]["reset_limit"] - time())}</b>\n'
         rclone_status = 'Activated' if rccmsg == ' ✓' else 'Deactivated'
         dmmode_status = 'Activated' if sendpm == ' ✓' else 'Deactivated'
         ssmode_status = 'Activated' if sendss == ' ✓' else 'Deactivated'
@@ -625,9 +613,6 @@ async def user_settings(client, message: Message):
 
 @new_task
 async def set_premium_users(_, message: Message):
-    if not config_dict['PREMIUM_MODE']:
-        await sendMessage('<b>Premium Mode</b> is disable!', message)
-        return
     reply_to = message.reply_to_message
     args = message.text.split()
     text = 'Reply to a user or send user ID with options (add/del) and duration time in day(s)'

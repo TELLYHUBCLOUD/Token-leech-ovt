@@ -101,11 +101,7 @@ async def addPremiumGC(_, message: Message):
     else:
         id_ = message.chat.id
 
-    if id_ in user_data and user_data.get(id_, {}).get('is_premium'):
-        msg = 'Chat is already Premium GC!'
-    else:
-        await update_user_ldata(id_, 'is_premium', True)
-        msg = 'Chat successfully upgraded to Premium GC!'
+    msg = 'Premium restrictions removed.'
 
     msg = await sendMessage(msg, message)
     await auto_delete_message(message, msg)
@@ -119,11 +115,7 @@ async def rmPremiumGC(_, message: Message):
     else:
         id_ = message.chat.id
 
-    if id_ not in user_data or user_data.get(id_, {}).get('is_premium'):
-        await update_user_ldata(id_, 'is_premium', False)
-        msg = 'Chat successfully downgraded from Premium GC.'
-    else:
-        msg = 'Chat is already not a Premium GC!'
+    msg = 'Premium restrictions removed.'
 
     msg = await sendMessage(msg, message)
     await auto_delete_message(message, msg)

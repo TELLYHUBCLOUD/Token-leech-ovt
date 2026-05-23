@@ -1,7 +1,9 @@
+
 import asyncio
 from secrets import token_hex
 import os
 import re
+import shlex
 from bot import LOGGER, task_dict, task_dict_lock
 from bot.helper.ext_utils.bot_utils import sync_to_async
 from bot.helper.mirror_utils.status_utils.mega_status import MegaDownloadStatus
@@ -21,31 +23,57 @@ class MegaAppListener:
         self.size = 0
         self.temp_path = f"/usr/src/app/downloads/{self.gid}"
         self.is_cancelled = False
+        self.is_folder = False
+        self.mega_files = []
         mega_tasks[self.gid] = self.temp_path
 
     async def get_metadata(self):
         try:
             import subprocess
-
-            # Since VPS containers might lack sudo permissions for APT-GET,
-            # we must fallback to JD dynamically if neither mega-get nor megadl is successfully verified inside PATH.
             if not await self._install_megatools():
-                LOGGER.info("megadl missing from PATH. Bypassing metadata.")
+                LOGGER.info("megatools missing from PATH. Bypassing metadata.")
                 return False
 
-            cmd = ["megadl", "--print-urls", self.listener.link]
+            cmd = ["megals", "-l", "--header", self.listener.link]
             process = await asyncio.create_subprocess_exec(*cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, stderr = await process.communicate()
-            if process.returncode != 0:
+
+            output = stdout.decode().strip()
+            if process.returncode != 0 and not output:
                 LOGGER.error(f"Mega Metadata Error: {stderr.decode().strip()}")
                 return False
 
-            output = stdout.decode().strip()
-            self.name = f"Mega_Download_{self.gid}"
-            self.size = 0
+            lines = output.split('\n')
+            total_size = 0
+            name = None
+
+            if "folder/" in self.listener.link or "#F!" in self.listener.link:
+                self.is_folder = True
+
+            if len(lines) > 2:
+                for line in lines[2:]:
+                    parts = line.strip().split(maxsplit=1)
+                    if len(parts) == 2 and parts[0].isdigit():
+                        total_size += int(parts[0])
+                        if not name:
+                            match = re.search(r"\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2}\s+(.*)", parts[1])
+                            if match:
+                                extracted = match.group(1)
+                                name = extracted.split('/')[0] if '/' in extracted else extracted
+                            else:
+                                name = parts[1].split()[-1].split('/')[0]
+
+            self.name = name if name else f"Mega_Download_{self.gid}"
+            self.size = total_size
 
             self.listener.name = self.name
             self.listener.size = self.size
+
+
+            if total_size == 0 and self.is_folder:
+                await self.listener.onDownloadError("Mega Folder is empty or invalid link.")
+                return False
+
             return True
         except Exception as e:
             LOGGER.error(f"Mega Metadata Error: {e}")
@@ -53,7 +81,7 @@ class MegaAppListener:
 
     async def _install_megatools(self):
         import shutil
-        if shutil.which('megadl'):
+        if shutil.which('megadl') and shutil.which('megals'):
             return True
         script = '''
         if ! command -v megadl &> /dev/null; then
@@ -71,39 +99,14 @@ class MegaAppListener:
             pass
         return False
 
-    async def _install_megacmd(self):
-        import shutil
-        if shutil.which('mega-get'):
-            return True
-        script = '''
-        if ! command -v mega-cmd &> /dev/null; then
-            export DEBIAN_FRONTEND=noninteractive
-            wget -q https://mega.nz/linux/repo/xUbuntu_22.04/amd64/megacmd-xUbuntu_22.04_amd64.deb
-            apt-get install -y ./megacmd-xUbuntu_22.04_amd64.deb || true
-            rm ./megacmd-xUbuntu_22.04_amd64.deb
-        fi
-        '''
-        import subprocess as py_subprocess
-        try:
-            py_subprocess.run(["bash", "-c", script], check=False, capture_output=True)
-            if shutil.which('mega-get'):
-                return True
-        except:
-            pass
-        return False
-
     async def download(self, path):
-        await self._install_megacmd()
+        import shutil
+        if not shutil.which('megadl'):
+            await self.listener.onDownloadError("megatools binary not found. Please install it first!")
+            return
 
-        # If metadata extraction fails entirely (e.g. megadl is missing due to permission denial), we immediately fallback to JDownloader
         if not await self.get_metadata():
-            LOGGER.info("Mega CLI failed or metadata could not be extracted. Delegating direct to JDownloader.")
-            from bot.helper.mirror_utils.download_utils.jd_download import add_jd_download
-            self.listener.isJd = True
-            try:
-                await add_jd_download(self.listener, path)
-            except Exception as e:
-                LOGGER.error(f"Fallback JDownloader failed: {e}")
+            await self.listener.onDownloadError("Invalid MEGA link or metadata extraction failed.")
             return
 
         msg, button = await stop_duplicate_check(self.listener)
@@ -146,10 +149,10 @@ class MegaAppListener:
         async def track_disk_progress():
             while not getattr(self.listener, 'is_cancelled', False):
                 try:
-                    total_bytes = sum(os.path.getsize(os.path.join(root, file)) for root, _, files in os.walk(path) for file in files)
+                    total_bytes = await sync_to_async(self._get_folder_size, path)
                     self.mega_status._downloaded_bytes = total_bytes
                     if self.listener.size == 0 and total_bytes > 0:
-                        self.listener.size = total_bytes * 2 # Estimation buffer
+                        self.listener.size = total_bytes * 2
                 except Exception:
                     pass
                 await asyncio.sleep(2)
@@ -158,16 +161,10 @@ class MegaAppListener:
 
         try:
             import subprocess
-            import shutil
+            cmd = ["megadl", "--path", path, self.listener.link]
+            process = await asyncio.create_subprocess_exec(*cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-            if shutil.which('mega-get'):
-                cmd = ["mega-get", self.listener.link, path]
-            else:
-                cmd = ["megadl", "--path", path, self.listener.link]
-
-            process = await asyncio.create_subprocess_exec(*cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-
-            await process.wait()
+            stdout, stderr = await process.communicate()
             progress_task.cancel()
 
             if process.returncode == 0:
@@ -175,13 +172,13 @@ class MegaAppListener:
                 await self.listener.onDownloadComplete()
                 return
             else:
-                LOGGER.info("Mega CLI failed. Fallback to JDownloader for Mega link.")
-                from bot.helper.mirror_utils.download_utils.jd_download import add_jd_download
-                self.listener.isJd = True
-                try:
-                    await add_jd_download(self.listener, path)
-                except Exception as e:
-                    LOGGER.error(f"Fallback JDownloader failed: {e}")
+                error_out = stderr.decode().lower()
+                if "bandwidth limit" in error_out or "quota" in error_out:
+                    await self.listener.onDownloadError("Mega Download Error: Quota exceeded.")
+                elif "invalid" in error_out or "link" in error_out or "error" in error_out:
+                    await self.listener.onDownloadError(f"Mega Download Error: Invalid link or file not found. Output: {error_out[:100]}")
+                else:
+                    await self.listener.onDownloadError(f"Mega Download Error: process failed. Output: {error_out[:100]}")
 
         except Exception as e:
             progress_task.cancel()
@@ -190,6 +187,13 @@ class MegaAppListener:
             await self.listener.onDownloadError(f"Mega Download Error: {e}")
         finally:
             await self.cleanup()
+
+    def _get_folder_size(self, folder):
+        total = 0
+        for root, _, files in os.walk(folder):
+            for file in files:
+                total += os.path.getsize(os.path.join(root, file))
+        return total
 
     async def cleanup(self):
         try:
@@ -202,7 +206,6 @@ class MegaAppListener:
         self.listener.is_cancelled = True
         try:
             import subprocess
-            subprocess.run(["pkill", "-f", "mega-get"])
             subprocess.run(["pkill", "-f", "megadl"])
         except:
             pass

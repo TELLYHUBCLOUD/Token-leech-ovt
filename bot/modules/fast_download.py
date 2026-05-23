@@ -68,9 +68,6 @@ class FastDL(TaskListener):
                 bulk_end = dargs[1] or None
             isBulk = True
 
-        if config_dict['PREMIUM_MODE'] and not is_premium_user(self.user_id, self.message.chat.id) and (self.multi > 0 or isBulk):
-            await sendMessage(f'Upss {self.tag}, multi/bulk mode for premium user only', self.message)
-            return
 
         if isBulk:
             await self.initBulk(input_list, bulk_start, bulk_end, FastDL)

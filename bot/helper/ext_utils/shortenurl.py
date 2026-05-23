@@ -29,7 +29,7 @@ def short_url(longurl, user_id=None, attempt=0):
 
     shortener_functions = {'shorte.st': shorte_st, 'linkvertise': linkvertise}
 
-    if (((not SHORTENERES and not SHORTENER_APIS) or (config_dict['PREMIUM_MODE'] and user_id and is_premium_user(user_id)) or
+    if (((not SHORTENERES and not SHORTENER_APIS) or True or
          user_id == config_dict['OWNER_ID']) and not config_dict['FORCE_SHORTEN']):
         return longurl
 

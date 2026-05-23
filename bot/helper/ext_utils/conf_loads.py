@@ -290,6 +290,8 @@ async def load_config():
 
     USER_TASKS_LIMIT = environ.get('USER_TASKS_LIMIT', '')
     USER_TASKS_LIMIT = int(USER_TASKS_LIMIT) if USER_TASKS_LIMIT else ''
+    STUCK_TASK_TIMEOUT = environ.get('STUCK_TASK_TIMEOUT', '900')
+    QUEUE_TASK_TIMEOUT = environ.get('QUEUE_TASK_TIMEOUT', '1800')
 
     ZIP_UNZIP_LIMIT = environ.get('ZIP_UNZIP_LIMIT', '')
     ZIP_UNZIP_LIMIT = float(ZIP_UNZIP_LIMIT) if ZIP_UNZIP_LIMIT else ''
@@ -577,6 +579,8 @@ async def load_config():
                         'TORRENT_DIRECT_LIMIT': TORRENT_DIRECT_LIMIT,
                         'TOTAL_TASKS_LIMIT': TOTAL_TASKS_LIMIT,
                         'USER_TASKS_LIMIT': USER_TASKS_LIMIT,
+                        'STUCK_TASK_TIMEOUT': STUCK_TASK_TIMEOUT,
+                        'QUEUE_TASK_TIMEOUT': QUEUE_TASK_TIMEOUT,
                         'ZIP_UNZIP_LIMIT': ZIP_UNZIP_LIMIT,
                         'STORAGE_THRESHOLD': STORAGE_THRESHOLD,
                         'MAX_YTPLAYLIST': MAX_YTPLAYLIST,

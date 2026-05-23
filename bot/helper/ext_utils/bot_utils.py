@@ -93,11 +93,7 @@ def presuf_remname_name(user_dict: int, name: str):
 
 
 def is_premium_user(user_id: int, chat_id: int = None):
-    if config_dict['PREMIUM_MODE'] and chat_id and user_data.get(chat_id, {}).get('is_premium'):
-        return True
-    user_dict = user_data.get(user_id, {})
-    return user_id == config_dict['OWNER_ID'] or (config_dict['PREMIUM_MODE'] and user_dict.get('is_premium')) or user_dict.get('is_sudo')
-
+    return True
 
 async def default_button(message: Message):
     try:
