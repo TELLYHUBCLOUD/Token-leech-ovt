@@ -62,6 +62,9 @@ class UseCheck:
             if self._user_dict.get('user_name', '') != uname:
                 await update_user_ldata(self._uid, 'user_name', self._message.from_user.username)
 
+    def _check_premium(self):
+        return
+
     def _check_ml(self):
         if mode := str(config_dict['DISABLE_MIRROR_LEECH']):
             if mode == 'mirror' and not self._is_leech:

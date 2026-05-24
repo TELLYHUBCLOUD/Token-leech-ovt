@@ -111,6 +111,10 @@ async def get_user_settings(from_user, data: str, uset_data: str):
         buttons.button_data('✓ Extensions Filters' if ex_ex else 'Extensions Filters', f'userset {user_id} setdata excluded_extensions')
 
         custom_cap = ' ✓' if user_dict.get('captions') else ' ✘'
+        user_premi = is_premium_user(user_id)
+        status_user = '<b></b>Status: <b>PREMIUM</b>\n' if user_premi else '<b></b>Status: <b>NORMAL</b>\n'
+        daily_limit = ''
+        premium_left = ''
         rclone_status = 'Activated' if rccmsg == ' ✓' else 'Deactivated'
         dmmode_status = 'Activated' if sendpm == ' ✓' else 'Deactivated'
         ssmode_status = 'Activated' if sendss == ' ✓' else 'Deactivated'

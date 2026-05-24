@@ -137,6 +137,9 @@ class TgUploader:
             async with bot_lock:
                 self._client = (bot_dict['USERBOT'] if bot_dict['IS_PREMIUM'] and await get_path_size(self._up_path) > DEFAULT_SPLIT_SIZE
                                 or bot_dict['USERBOT'] and config_dict['USERBOT_LEECH'] else bot)
+            if self._send_msg is None:
+                LOGGER.error("send_msg is None, cannot upload")
+                raise ValueError("send_msg is None")
             is_video, is_audio, is_image = await get_document_type(self._up_path)
             if not is_image and thumb is None:
                 file_name = ospath.splitext(file)[0]
@@ -354,18 +357,35 @@ class TgUploader:
     async def _msg_to_reply(self):
         if self._leech_log and self._leech_log != self._listener.message.chat.id:
             caption = f'<b>▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n{self._listener.name}\n▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬</b>'
-            if self._thumb and await aiopath.exists(self._thumb):
-                self._send_msg: Message = await bot.send_photo(self._leech_log, photo=self._thumb, caption=caption)
-            else:
-                self._send_msg: Message = await bot.send_message(self._leech_log, caption, disable_web_page_preview=True)
-            if config_dict['LEECH_INFO_PIN']:
-                await self._send_msg.pin(both_sides=True)
+            try:
+                # Need to verify if the bot is actually able to send to this log chat
+                if self._thumb and await aiopath.exists(self._thumb):
+                    self._send_msg: Message = await bot.send_photo(self._leech_log, photo=self._thumb, caption=caption)
+                else:
+                    self._send_msg: Message = await bot.send_message(self._leech_log, caption, disable_web_page_preview=True)
+                if config_dict['LEECH_INFO_PIN']:
+                    await self._send_msg.pin(both_sides=True)
+            except Exception as e:
+                if "CHANNEL_INVALID" in str(e) or "PEER_ID_INVALID" in str(e):
+                    LOGGER.warning(f"Skipping _msg_to_reply for log chat {self._leech_log}: {e}")
+                    # Fallback to the original chat if log fails
+                    self._send_msg = await bot.get_messages(self._listener.message.chat.id, self._listener.mid)
+                else:
+                    raise e
         else:
             self._send_msg: Message = await bot.get_messages(self._listener.message.chat.id, self._listener.mid)
-            if not self._send_msg or not self._send_msg.chat:
-                self._send_msg = self._listener.message
+
+        if not self._send_msg or getattr(self._send_msg, 'chat', None) is None:
+            self._send_msg = self._listener.message
+
         if self._send_msg and self._log_title and self._listener.upDest:
-            await self._copy_Leech(self._listener.upDest, self._send_msg)
+            try:
+                await self._copy_Leech(self._listener.upDest, self._send_msg)
+            except Exception as e:
+                if "CHANNEL_INVALID" in str(e) or "PEER_ID_INVALID" in str(e):
+                    LOGGER.warning(f"Skipping _copy_Leech for dump chat {self._listener.upDest}: {e}")
+                else:
+                    raise e
 
     @handle_message
     async def _send_media_group(self, msgs: list[Message], subkey: str, key: str):

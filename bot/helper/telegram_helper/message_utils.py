@@ -85,7 +85,13 @@ async def sendSticker(fileid: str, message: Message, is_misc=False):
 
 @handle_message
 async def sendCustom(text: str, chat_id: str | int, reply_markup: InlineKeyboardMarkup=None, nolog=False):
-    return await bot.send_message(chat_id, limit.text(text), reply_markup=reply_markup, disable_notification=True)
+    try:
+        return await bot.send_message(chat_id, limit.text(text), reply_markup=reply_markup, disable_notification=True)
+    except Exception as e:
+        if "CHANNEL_INVALID" in str(e) or "PEER_ID_INVALID" in str(e):
+            LOGGER.warning(f"sendCustom skipped: {e} - Chat ID {chat_id} is invalid or bot not joined.")
+            return None
+        raise e
 
 
 @handle_message
