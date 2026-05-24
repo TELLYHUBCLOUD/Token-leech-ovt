@@ -223,8 +223,6 @@ PING_URL = environ.get('PING_URL', '')
 ENABLE_STREAM_LINK = environ.get('ENABLE_STREAM_LINK', 'False').lower() == 'true'
 STREAM_BASE_URL = environ.get('STREAM_BASE_URL', '').rstrip('/')
 STREAM_PORT = environ.get('STREAM_PORT', '')
-VERCEL_URL = environ.get('VERCEL_URL', '').rstrip('/')
-VERCEL_API = environ.get('VERCEL_API', '')
 QUEUE_COMPLETE = environ.get('QUEUE_COMPLETE', 'True').lower() == 'true'
 DISABLE_MIRROR_LEECH = environ.get('DISABLE_MIRROR_LEECH', '')
 INDEX_URL = environ.get('INDEX_URL', '').rstrip('/')
@@ -553,8 +551,6 @@ config_dict = {'BOT_TOKEN': BOT_TOKEN,
                'ENABLE_STREAM_LINK': ENABLE_STREAM_LINK,
                'STREAM_BASE_URL': STREAM_BASE_URL,
                'STREAM_PORT': STREAM_PORT,
-               'VERCEL_URL': VERCEL_URL,
-               'VERCEL_API': VERCEL_API,
                'DISABLE_MIRROR_LEECH': DISABLE_MIRROR_LEECH,
                'AUTHORIZED_CHATS': AUTHORIZED_CHATS,
                'SUDO_USERS': SUDO_USERS,
