@@ -83,27 +83,32 @@ class MegaAppListener:
         import shutil
         if shutil.which('megadl') and shutil.which('megals'):
             return True
+
         script = '''
         if ! command -v megadl &> /dev/null; then
             export DEBIAN_FRONTEND=noninteractive
-            apt-get update -y || true
-            apt-get install -y megatools || true
+            if command -v apt-get &> /dev/null; then
+                apt-get update -y || true
+                apt-get install -y megatools || true
+            elif command -v apk &> /dev/null; then
+                apk add megatools || true
+            fi
         fi
         '''
         import subprocess as py_subprocess
         try:
             py_subprocess.run(["bash", "-c", script], check=False, capture_output=True)
-            if shutil.which('megadl'):
+            if shutil.which('megadl') and shutil.which('megals'):
                 return True
         except:
             pass
         return False
-
     async def download(self, path):
         import shutil
-        if not shutil.which('megadl'):
-            await self.listener.onDownloadError("megatools binary not found. Please install it first!")
-            return
+        if not shutil.which('megadl') or not shutil.which('megals'):
+            if not await self._install_megatools():
+                await self.listener.onDownloadError("❌ MEGA download failed: megatools not installed on server. Contact bot owner.")
+                return
 
         if not await self.get_metadata():
             await self.listener.onDownloadError("Invalid MEGA link or metadata extraction failed.")
