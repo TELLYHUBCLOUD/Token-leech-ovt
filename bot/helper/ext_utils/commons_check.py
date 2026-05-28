@@ -71,3 +71,37 @@ class UseCheck:
             if mode == 'leech' and self._is_leech:
                 return '⁍ Leech mode has been disabled!'
 
+    async def _force_sub(self, buttons):
+        if not config_dict.get('FSUB_IDS'):
+            return None
+        from bot import bot
+        from pyrogram.errors import UserNotParticipant
+        try:
+            for channel_id in config_dict['FSUB_IDS'].split():
+                try:
+                    await bot.get_chat_member(channel_id, self._uid)
+                except UserNotParticipant:
+                    msg = "⁍ You must join our channel to use this bot!"
+                    buttons.button_link("Join Channel", f"https://t.me/{channel_id.lstrip('-100')}")
+                    return msg
+        except Exception:
+            pass
+        return None
+
+    async def _task_limiter(self):
+        limit = config_dict.get('USER_TASKS_LIMIT', 0)
+        if limit:
+            task = await get_user_task(self._uid)
+            if task >= limit:
+                return f"⁍ You have reached the maximum tasks limit: {limit}"
+        return None
+
+    def _check_premium(self):
+        return None  # All users are premium now per prior instruction
+
+    async def _daily_limit(self):
+        # Dummy or simple logic if daily limits aren't enforced, but per prior instruction limits should be removed or bypassed.
+        return None
+
+    async def _check_session(self, buttons):
+        return None
