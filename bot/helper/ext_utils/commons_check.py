@@ -21,7 +21,7 @@ class UseCheck:
         self._uid = message.from_user.id
         self._user_dict: dict = user_data.get(self._uid, {})
         self.isPremi = is_premium_user(self._uid, getattr(message.chat, 'id', None))
-        bot_loop.create_task(self._check_limit())
+
 
     async def run(self, limit=False, forpremi=False, daily=False, ml_chek=False, session=False, send_pm=False):
         msgs = []
