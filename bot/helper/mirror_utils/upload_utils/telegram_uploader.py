@@ -447,8 +447,7 @@ class TgUploader:
                         import base64
                         from bot.helper.ext_utils.status_utils import get_readable_file_size
 
-                        file_name_title = self._send_msg.caption.split('
-')[0] if self._send_msg.caption else "Video_Stream.mkv"
+                        file_name_title = self._send_msg.caption.split('\n')[0] if self._send_msg.caption else "Video_Stream.mkv"
 
                         payload = {
                             "video_url": video_url,
@@ -461,20 +460,10 @@ class TgUploader:
                         stream_watch = f"{base_url}/watch?data={base64_data}"
                         stream_dl = f"{base_url}/download?data={base64_data}"
 
-                        new_caption = (f"<b>Stream File Successfully Processed</b>
-
-"
-                                       f"<b>Name:</b> <code>{file_name_title}</code> <b>Size:</b> {get_readable_file_size(self._size)}
-
-"
-                                       f"<b>Stream Link:</b>
-{stream_watch}
-
-"
-                                       f"<b>Download Link:</b>
-{stream_dl}
-
-"
+                        new_caption = (f"<b>Stream File Successfully Processed</b>\n\n"
+                                       f"<b>Name:</b> <code>{file_name_title}</code> <b>Size:</b> {get_readable_file_size(self._size)}\n\n"
+                                       f"<b>Stream Link:</b>\n{stream_watch}\n\n"
+                                       f"<b>Download Link:</b>\n{stream_dl}\n\n"
                                        f"‣ ᴘᴏᴡᴇʀᴇᴅ ʙʏ: Sᴇᴄʀᴇᴄᴛ 𝐁ᴏᴛ 𝐔ᴘᴅᴀᴛᴇs")
 
                         self._buttons.button_link('▶ Stream', await sync_to_async(short_url, stream_watch, self._listener.user_id), 'header')
