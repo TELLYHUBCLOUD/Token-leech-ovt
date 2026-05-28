@@ -196,7 +196,6 @@ async def edit_user_settings(client: Client, query: CallbackQuery):
     user_dict = user_data.get(user_id, {})
     premi_features = ['caption', 'dump_ch', 'gdrive_id', 'media_group', 'prename', 'sufname', 'remname', 'metadata', 'session_string', 'enable_pm', 'enable_ss']
     pre_data = data[3] if data[2] == 'setdata' else data[2]
-        return
     if user_id != int(data[1]):
         await query.answer('Not Yours!', True)
         return
