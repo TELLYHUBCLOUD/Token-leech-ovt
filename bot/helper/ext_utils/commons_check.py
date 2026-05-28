@@ -33,6 +33,8 @@ class UseCheck:
             msgs.append(msg)
         if limit and (msg := await self._task_limiter()):
             msgs.append(msg)
+        if forpremi and (msg := self._check_premium()):
+            msgs.append(msg)
         if daily and (msg := await self._daily_limit()):
             msgs.append(msg)
         if ml_chek and (msg := self._check_ml()):
@@ -62,9 +64,6 @@ class UseCheck:
             if self._user_dict.get('user_name', '') != uname:
                 await update_user_ldata(self._uid, 'user_name', self._message.from_user.username)
 
-    def _check_premium(self):
-        return
-
     def _check_ml(self):
         if mode := str(config_dict['DISABLE_MIRROR_LEECH']):
             if mode == 'mirror' and not self._is_leech:
@@ -72,45 +71,3 @@ class UseCheck:
             if mode == 'leech' and self._is_leech:
                 return '⁍ Leech mode has been disabled!'
 
-
-    async def _daily_limit(self):
-        if config_dict['DAILY_MODE'] and not self.isPremi and await UserDaily(self._uid).get_daily_limit():
-            return f"⁍ Reach daily limit: ({config_dict['DAILY_LIMIT_SIZE']}GB), check ur status in /{BotCommands.UserSetCommand}"
-
-    async def _check_session(self, buttons):
-        if SESSION_TIMEOUT := config_dict['SESSION_TIMEOUT']:
-            if await CustomFilters.sudo('', self._message):
-                return
-            user_dict = user_data.get(self._uid, {})
-            if not (expire := user_dict.get('session_time')) or time() - expire > SESSION_TIMEOUT:
-                token = user_dict['session_token'] if expire is None and 'session_token' in user_dict else str(uuid4())
-                if expire:
-                    del user_dict['session_time']
-                await update_user_ldata(self._uid, 'session_token', token)
-                buttons.button_link('Get Session', await sync_to_async(short_url, f'https://t.me/{bot_name}?start={token}'))
-                return f'⁍ Session is exipred (renew every {get_readable_time(SESSION_TIMEOUT)}</i>).'
-
-    async def _check_limit(self):
-        if self._user_dict.get('is_sudo') and 'sudo_left' in self._user_dict and self._user_dict['sudo_left'] - time() <= 0:
-            del user_data[self._uid]['sudo_left']
-            await update_user_ldata(self._uid, 'is_sudo', False)
-
-    async def _force_sub(self, buttons: ButtonMaker):
-        if config_dict['FSUB']:
-            try:
-                await self._message._client.get_chat_member(config_dict['FSUB_CHANNEL_ID'], self._uid)
-            except:
-                CHANNEL_USERNAME = config_dict['CHANNEL_USERNAME']
-                buttons.button_link(f"{config_dict['FSUB_BUTTON_NAME']}", f'https://t.me/{CHANNEL_USERNAME}')
-                return f"⁍ You must join <a href='https://t.me/{CHANNEL_USERNAME}'>{CHANNEL_USERNAME}</a>."
-
-    async def _task_limiter(self):
-        if not self.isPremi:
-            if USER_TASKS_LIMIT := config_dict['USER_TASKS_LIMIT']:
-                if await get_user_task(self._uid) >= USER_TASKS_LIMIT:
-                    return f'⁍ Reached user task limit: {USER_TASKS_LIMIT} task!'
-            if TOTAL_TASKS_LIMIT := config_dict['TOTAL_TASKS_LIMIT']:
-                async with task_dict_lock:
-                    total_tasks = len(task_dict)
-                if total_tasks >= TOTAL_TASKS_LIMIT:
-                    return f'⁍ Reached total task limit: {TOTAL_TASKS_LIMIT} task!'

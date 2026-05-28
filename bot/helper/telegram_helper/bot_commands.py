@@ -25,8 +25,6 @@ class _BotCommands:
         self.UnAuthorizeCommand = f'unauthorize{CMD_SUFFIX}'
         self.AddSudoCommand = f'addsudo{CMD_SUFFIX}'
         self.RmSudoCommand = f'rmsudo{CMD_SUFFIX}'
-        self.PremiumGCCommand = [f'premiumgc{CMD_SUFFIX}', f'primiumgc{CMD_SUFFIX}']
-        self.RmPremiumGCCommand = [f'offpremiumgc{CMD_SUFFIX}', f'offprimiumgc{CMD_SUFFIX}']
         self.PingCommand = f'ping{CMD_SUFFIX}'
         self.RestartCommand = f'restart{CMD_SUFFIX}'
         self.StatsCommand = f'stats{CMD_SUFFIX}'

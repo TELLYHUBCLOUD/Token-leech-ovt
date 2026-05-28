@@ -29,7 +29,6 @@ from bot.helper.ext_utils.shortenurl import short_url
 from bot.helper.ext_utils.status_utils import get_readable_file_size, get_readable_time, get_progress_bar_string
 from bot.helper.ext_utils.telegraph_helper import telegraph
 from bot.helper.listeners.aria2_listener import start_aria2_listener
-from bot.helper.listeners.watchdog import watchdog
 from bot.helper.mirror_utils.rclone_utils.serve import rclone_serve_booter
 from bot.helper.stream_utils.file_properties import gen_link
 from bot.helper.stream_utils.web_services import start_server, server
@@ -328,7 +327,6 @@ async def restart_notification():
 
 async def main():
     jdownloader.initiate()
-    await watchdog.start()
     bot.add_handler(MessageHandler(start, filters=command(BotCommands.StartCommand)))
     bot.add_handler(MessageHandler(log, filters=command(BotCommands.LogCommand) & CustomFilters.sudo))
     bot.add_handler(MessageHandler(restart, filters=command(BotCommands.RestartCommand) & CustomFilters.sudo))

@@ -1,9 +1,7 @@
-
 import asyncio
 from secrets import token_hex
 import os
 import re
-import shlex
 from bot import LOGGER, task_dict, task_dict_lock
 from bot.helper.ext_utils.bot_utils import sync_to_async
 from bot.helper.mirror_utils.status_utils.mega_status import MegaDownloadStatus
@@ -24,7 +22,6 @@ class MegaAppListener:
         self.temp_path = f"/usr/src/app/downloads/{self.gid}"
         self.is_cancelled = False
         self.is_folder = False
-        self.mega_files = []
         mega_tasks[self.gid] = self.temp_path
 
     async def get_metadata(self):
@@ -69,7 +66,6 @@ class MegaAppListener:
             self.listener.name = self.name
             self.listener.size = self.size
 
-
             if total_size == 0 and self.is_folder:
                 await self.listener.onDownloadError("Mega Folder is empty or invalid link.")
                 return False
@@ -97,12 +93,14 @@ class MegaAppListener:
         '''
         import subprocess as py_subprocess
         try:
-            py_subprocess.run(["bash", "-c", script], check=False, capture_output=True)
+            process = await asyncio.create_subprocess_exec("bash", "-c", script, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            await process.wait()
             if shutil.which('megadl') and shutil.which('megals'):
                 return True
         except:
             pass
         return False
+
     async def download(self, path):
         import shutil
         if not shutil.which('megadl') or not shutil.which('megals'):

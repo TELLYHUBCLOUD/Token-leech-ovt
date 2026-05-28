@@ -457,13 +457,18 @@ class VidEcxecutor(FFProgress):
 
         if self._metadata:
             base_dir = self.listener.dir
+            from aiofiles.os import makedirs
             await makedirs(base_dir, exist_ok=True)
             streams = self._metadata[0]
         else:
             main_video = file_list[0]
+            from asyncio import gather
+            from bot.helper.ext_utils.media_utils import get_metavideo
+            from bot.helper.ext_utils.files_utils import get_path_size
             base_dir, (streams, _), self.size = await gather(self._name_base_dir(main_video, 'Compress', multi),
                                                              get_metavideo(main_video), get_path_size(main_video))
         self._start_handler(streams)
+        from asyncio import gather
         await gather(self._send_status(), self.event.wait())
         await self._queue()
         if self.is_cancel:
@@ -475,28 +480,233 @@ class VidEcxecutor(FFProgress):
         for file in file_list:
             self.path = file
             if not self._metadata:
+                from asyncio import gather
+                from bot.helper.ext_utils.files_utils import get_path_size
                 _, self.size = await gather(self._name_base_dir(self.path, 'Compress', multi), get_path_size(self.path))
             self.outfile = ospath.join(base_dir, self.name)
             self._files.append(self.path)
-            cmd = [FFMPEG_NAME, '-hide_banner', '-ignore_unknown', '-y', '-i', self.path, '-preset', config_dict['LIB265_PRESET'], '-c:v', 'libx265',
-                   '-pix_fmt', 'yuv420p10le', '-crf', '24', '-profile:v', 'main10', '-map', f'0:{self.data["video"]}', '-map', '0:s:?', '-c:s', 'copy']
+
+            quality = self.data.get('quality', '720p')
+            from bot import user_data
+            user_id = self.listener.user_id
+            user_dict = user_data.get(user_id, {})
+            compress_dict = user_dict.get('compress_settings', {})
+            if not compress_dict:
+                compress_dict = {
+                    '360p': {'vcodec': 'libx265', 'acodec': 'aac', 'crf': '24', 'res': '640x360', 'preset': 'slow', 'audio_b': '128k', 'bits': '8 bits'},
+                    '480p': {'vcodec': 'libx265', 'acodec': 'aac', 'crf': '24', 'res': '854x480', 'preset': 'slow', 'audio_b': '128k', 'bits': '8 bits'},
+                    '720p': {'vcodec': 'libx265', 'acodec': 'aac', 'crf': '24', 'res': '1280x720', 'preset': 'slow', 'audio_b': '192k', 'bits': '8 bits'},
+                    '1080p': {'vcodec': 'libx265', 'acodec': 'aac', 'crf': '24', 'res': '1920x1080', 'preset': 'slow', 'audio_b': '192k', 'bits': '8 bits'}
+                }
+
+            settings = compress_dict.get(quality, compress_dict.get('720p', {}))
+            vcodec = settings.get('vcodec', 'libx265')
+            acodec = settings.get('acodec', 'aac')
+            crf = settings.get('crf', '24')
+            res = settings.get('res', '1280x720')
+            preset = settings.get('preset', 'slow')
+            audio_b = settings.get('audio_b', '192k')
+            bits = settings.get('bits', '8 bits')
+            pix_fmt = 'yuv420p10le' if '10' in bits else 'yuv420p'
+            profile = 'main10' if '10' in bits else 'main'
+
+            cmd = [FFMPEG_NAME, '-hide_banner', '-ignore_unknown', '-y', '-i', self.path, '-preset', preset, '-c:v', vcodec,
+                   '-pix_fmt', pix_fmt, '-crf', crf, '-profile:v', profile, '-map', f'0:{self.data.get("video", 0)}', '-map', '0:s:?', '-c:s', 'copy']
+
+            if 'audio' in self.data and self.data['audio'] != 0:
+                cmd.extend(['-map', f'0:{self.data["audio"]}', '-c:a', acodec, '-b:a', audio_b])
+            else:
+                cmd.extend(['-c:a', acodec, '-b:a', audio_b])
+
+            from bot import config_dict
             if banner := config_dict['COMPRESS_BANNER']:
+                from aiofiles import open as aiopen
                 sub_file = ospath.join(base_dir, 'subtitle.srt')
                 self._files.append(sub_file)
-                quality = f',scale={self._qual[quality]}:-2' if quality else ''
                 async with aiopen(sub_file, 'w') as f:
-                    await f.write(f'1\n00:00:03,000 --> 00:00:08,00\n{banner}')
-                cmd.extend(('-vf', f"subtitles='{sub_file}'{quality},unsharp,eq=contrast=1.07", '-metadata', f'title={banner}', '-metadata:s:v',
+                    await f.write(f'1\n00:00:03,000 --> 00:00:08,000\n{banner}\n')
+                cmd.extend(('-vf', f"subtitles='{sub_file}',scale={res},unsharp,eq=contrast=1.07", '-metadata', f'title={banner}', '-metadata:s:v',
                             f'title={banner}', '-x265-params', 'no-info=1', '-bsf:v', 'filter_units=remove_types=6'))
-            elif quality:
-                cmd.extend(('-vf', f'scale={self._qual[quality]}:-2'))
+            else:
+                cmd.extend(('-vf', f'scale={res}'))
 
-            cmd.extend(('-c:a', 'aac', '-b:a', '160k', '-map', f'0:{self.data["audio"]}?', self.outfile) if self.data else [self.outfile])
-            await self._run_cmd(cmd)
+            cmd.extend([self.outfile])
+            await self._run_cmd(cmd, 'Compress')
             if self.is_cancel:
                 return
 
         return await self._final_path()
+
+    async def _subsync(self, type: str='sync_manual'):
+        if not self._is_dir:
+            return self._up_path
+        self.size = await get_path_size(self.path)
+        list_files = natsorted(await listdir(self.path))
+        if len(list_files) <= 1:
+            return self._up_path
+        sub_files, ref_files = [], []
+        if type == 'sync_manual':
+            index = 1
+            self.data = {'list': {}, 'final': {}}
+            for file in list_files:
+                if (await get_document_type(ospath.join(self.path, file)))[0] or file.endswith(('.srt', '.ass')):
+                    self.data['list'].update({index: file})
+                    index += 1
+            if not self.data['list']:
+                return self._up_path
+            self._start_handler()
+            await gather(self._send_status(), self.event.wait())
+
+            if self.is_cancel:
+                return
+            if not self.data or not self.data['final']:
+                return self._up_path
+            for key in self.data['final'].values():
+                sub_files.append(ospath.join(self.path, key['file']))
+                ref_files.append(ospath.join(self.path, key['ref']))
+        else:
+            for file in list_files:
+                file_ = ospath.join(self.path, file)
+                is_video, is_audio, _ = await get_document_type(file_)
+                if is_video or is_audio:
+                    ref_files.append(file_)
+                elif file_.lower().endswith(('.srt', '.ass')):
+                    sub_files.append(file_)
+
+            if not sub_files:
+                return self._up_path
+
+            if not ref_files and len(sub_files) > 1:
+                ref_files = list(filter(lambda x: (x, sub_files.remove(x)), sub_files))
+
+            if not ref_files or not sub_files:
+                return self._up_path
+
+        for sub_file, ref_file in zip(sub_files, ref_files):
+            self._files.extend((sub_file, ref_file))
+            self.size = await get_path_size(ref_file)
+            self.name = ospath.basename(sub_file)
+            name, ext = ospath.splitext(sub_file)
+            cmd = ['alass', '--allow-negative-timestamps', ref_file, sub_file, f'{name}_SYNC.{ext}']
+            await self._run_cmd(cmd, 'direct')
+            if self.is_cancel:
+                return
+
+        return await self._final_path(self._up_path)
+
+    async def _subsync(self, type: str='sync_manual'):
+        if not self._is_dir:
+            return self._up_path
+        self.size = await get_path_size(self.path)
+        list_files = natsorted(await listdir(self.path))
+        if len(list_files) <= 1:
+            return self._up_path
+        sub_files, ref_files = [], []
+        if type == 'sync_manual':
+            index = 1
+            self.data = {'list': {}, 'final': {}}
+            for file in list_files:
+                if (await get_document_type(ospath.join(self.path, file)))[0] or file.endswith(('.srt', '.ass')):
+                    self.data['list'].update({index: file})
+                    index += 1
+            if not self.data['list']:
+                return self._up_path
+            self._start_handler()
+            await gather(self._send_status(), self.event.wait())
+
+            if self.is_cancel:
+                return
+            if not self.data or not self.data['final']:
+                return self._up_path
+            for key in self.data['final'].values():
+                sub_files.append(ospath.join(self.path, key['file']))
+                ref_files.append(ospath.join(self.path, key['ref']))
+        else:
+            for file in list_files:
+                file_ = ospath.join(self.path, file)
+                is_video, is_audio, _ = await get_document_type(file_)
+                if is_video or is_audio:
+                    ref_files.append(file_)
+                elif file_.lower().endswith(('.srt', '.ass')):
+                    sub_files.append(file_)
+
+            if not sub_files:
+                return self._up_path
+
+            if not ref_files and len(sub_files) > 1:
+                ref_files = list(filter(lambda x: (x, sub_files.remove(x)), sub_files))
+
+            if not ref_files or not sub_files:
+                return self._up_path
+
+        for sub_file, ref_file in zip(sub_files, ref_files):
+            self._files.extend((sub_file, ref_file))
+            self.size = await get_path_size(ref_file)
+            self.name = ospath.basename(sub_file)
+            name, ext = ospath.splitext(sub_file)
+            cmd = ['alass', '--allow-negative-timestamps', ref_file, sub_file, f'{name}_SYNC.{ext}']
+            await self._run_cmd(cmd, 'direct')
+            if self.is_cancel:
+                return
+
+        return await self._final_path(self._up_path)
+
+    async def _subsync(self, type: str='sync_manual'):
+        if not self._is_dir:
+            return self._up_path
+        self.size = await get_path_size(self.path)
+        list_files = natsorted(await listdir(self.path))
+        if len(list_files) <= 1:
+            return self._up_path
+        sub_files, ref_files = [], []
+        if type == 'sync_manual':
+            index = 1
+            self.data = {'list': {}, 'final': {}}
+            for file in list_files:
+                if (await get_document_type(ospath.join(self.path, file)))[0] or file.endswith(('.srt', '.ass')):
+                    self.data['list'].update({index: file})
+                    index += 1
+            if not self.data['list']:
+                return self._up_path
+            self._start_handler()
+            await gather(self._send_status(), self.event.wait())
+
+            if self.is_cancel:
+                return
+            if not self.data or not self.data['final']:
+                return self._up_path
+            for key in self.data['final'].values():
+                sub_files.append(ospath.join(self.path, key['file']))
+                ref_files.append(ospath.join(self.path, key['ref']))
+        else:
+            for file in list_files:
+                file_ = ospath.join(self.path, file)
+                is_video, is_audio, _ = await get_document_type(file_)
+                if is_video or is_audio:
+                    ref_files.append(file_)
+                elif file_.lower().endswith(('.srt', '.ass')):
+                    sub_files.append(file_)
+
+            if not sub_files:
+                return self._up_path
+
+            if not ref_files and len(sub_files) > 1:
+                ref_files = list(filter(lambda x: (x, sub_files.remove(x)), sub_files))
+
+            if not ref_files or not sub_files:
+                return self._up_path
+
+        for sub_file, ref_file in zip(sub_files, ref_files):
+            self._files.extend((sub_file, ref_file))
+            self.size = await get_path_size(ref_file)
+            self.name = ospath.basename(sub_file)
+            name, ext = ospath.splitext(sub_file)
+            cmd = ['alass', '--allow-negative-timestamps', ref_file, sub_file, f'{name}_SYNC.{ext}']
+            await self._run_cmd(cmd, 'direct')
+            if self.is_cancel:
+                return
+
+        return await self._final_path(self._up_path)
 
     async def _vid_marker(self, **kwargs):
         await self._queue(True)

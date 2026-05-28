@@ -107,19 +107,69 @@ class ExtraSelect:
 
     async def compress_select(self, streams: dict):
         self.executor.data = {}
+        for stream in streams:
+            indexmap, codec_type = stream.get('index'), stream.get('codec_type')
+            if codec_type == 'video' and indexmap == 0:
+                self.executor.data['video'] = indexmap
+            if codec_type == 'video' and 'video' not in self.executor.data:
+                self.executor.data['video'] = indexmap
+
+        buttons = ButtonMaker()
+        buttons.button_data('360p', 'extra compress_qual 360p')
+        buttons.button_data('480p', 'extra compress_qual 480p')
+        buttons.button_data('720p', 'extra compress_qual 720p')
+        buttons.button_data('1080p', 'extra compress_qual 1080p')
+        buttons.button_data('Cancel', 'extra cancel', 'footer')
+        await self.update_message(f'{self._listener.tag}, Select Compression Quality:\n<code>{self.executor.name}</code>', buttons.build_menu(2))
+
+    async def _show_compress_settings(self, quality: str):
+        from bot import user_data
+        user_id = self._listener.user_id
+        user_dict = user_data.get(user_id, {})
+        compress_dict = user_dict.get('compress_settings', {})
+        if not compress_dict:
+            compress_dict = {
+                '360p': {'vcodec': 'libx265', 'acodec': 'aac', 'crf': '24', 'res': '640x360', 'preset': 'slow', 'audio_b': '128k', 'bits': '8 bits'},
+                '480p': {'vcodec': 'libx265', 'acodec': 'aac', 'crf': '24', 'res': '854x480', 'preset': 'slow', 'audio_b': '128k', 'bits': '8 bits'},
+                '720p': {'vcodec': 'libx265', 'acodec': 'aac', 'crf': '24', 'res': '1280x720', 'preset': 'slow', 'audio_b': '192k', 'bits': '8 bits'},
+                '1080p': {'vcodec': 'libx265', 'acodec': 'aac', 'crf': '24', 'res': '1920x1080', 'preset': 'slow', 'audio_b': '192k', 'bits': '8 bits'}
+            }
+            from bot.helper.ext_utils.bot_utils import update_user_ldata
+            await update_user_ldata(user_id, 'compress_settings', compress_dict)
+
+        settings = compress_dict.get(quality, compress_dict.get('720p', {}))
+
+        text = f"Tʜᴇ Cᴜʀʀᴇɴᴛ Sᴇᴛᴛɪɴɢꜱ ᴡɪʟʟ ʙᴇ Aᴅᴅᴇᴅ Yᴏᴜʀ Vɪᴅᴇᴏ Fɪʟᴇ ({quality}):\n"
+        text += f"Video Codec : {settings.get('vcodec', 'libx265')}\n"
+        text += f"Audio Codec : {settings.get('acodec', 'aac')}\n"
+        text += f"Crf : {settings.get('crf', '24')}\n"
+        text += f"Resolution : {settings.get('res', '1280x720')}\n"
+        text += f"Preset : {settings.get('preset', 'slow')}\n"
+        text += f"Audio Bitrate : {settings.get('audio_b', '192k')}\n"
+        text += f"Bits : {settings.get('bits', '8 bits')}\n"
+
+        buttons = ButtonMaker()
+        buttons.button_data('Edit Video Codec', f'extra compress_edit {quality} vcodec')
+        buttons.button_data('Edit Audio Codec', f'extra compress_edit {quality} acodec')
+        buttons.button_data('Edit CRF', f'extra compress_edit {quality} crf')
+        buttons.button_data('Edit Resolution', f'extra compress_edit {quality} res')
+        buttons.button_data('Edit Preset', f'extra compress_edit {quality} preset')
+        buttons.button_data('Edit Audio Bitrate', f'extra compress_edit {quality} audio_b')
+        buttons.button_data('Edit Bits', f'extra compress_edit {quality} bits')
+        buttons.button_data('✅ Use This Quality', f'extra compress_apply {quality}', 'footer')
+        buttons.button_data('🔙 Back', 'extra compress_back', 'footer')
+        await self.update_message(text, buttons.build_menu(2))
+
+    async def compress_audio_select(self, streams: dict):
         buttons = ButtonMaker()
         for stream in streams:
             indexmap, codec_type, lang = stream.get('index'), stream.get('codec_type'), stream.get('tags', {}).get('language')
             if not lang:
                 lang = str(indexmap)
-            if codec_type == 'video' and indexmap == 0:
-                self.executor.data['video'] = indexmap
-            if codec_type == 'video' and 'video' not in self.executor.data:
-                self.executor.data['video'] = indexmap
             if codec_type == 'audio':
-                buttons.button_data(f'Audio ~ {lang.upper()}', f'extra compress {indexmap}')
-        buttons.button_data('Continue', 'extra compress 0')
-        buttons.button_data('Cancel', 'extra cancel')
+                buttons.button_data(f'Audio ~ {lang.upper()}', f'extra compress_audio {indexmap}')
+        buttons.button_data('Continue', 'extra compress_audio 0')
+        buttons.button_data('Cancel', 'extra cancel', 'footer')
         await self.update_message(f'{self._listener.tag}, Select available audio or press <b>Continue (no audio)</b>.\n<code>{self.executor.name}</code>', buttons.build_menu(2))
 
     async def rmstream_select(self, streams: dict):
@@ -226,7 +276,63 @@ async def cb_extra(_, query: CallbackQuery, obj: ExtraSelect):
                 obj.event.set()
                 return
             await gather(query.answer(), obj.subsync_select())
-        case 'compress':
+        case 'compress_qual':
+            await query.answer()
+            obj.executor.data['quality'] = data[2]
+            await obj._show_compress_settings(data[2])
+
+        case 'compress_back':
+            await query.answer()
+            await obj.compress_select(obj.executor._metadata[0] if obj.executor._metadata else [])
+
+        case 'compress_apply':
+            await query.answer()
+            obj.executor.data['quality'] = data[2]
+            await obj.compress_audio_select(obj.executor._metadata[0] if obj.executor._metadata else [])
+
+        case 'compress_edit':
+            await query.answer()
+            quality = data[2]
+            setting_key = data[3]
+            msg_prompt = await sendMessage(f"Send new value for {setting_key} ({quality}):", obj._listener.message)
+
+            from pyrogram.filters import user, text
+            from pyrogram.handlers import MessageHandler
+            from asyncio import Event, wait_for
+            from functools import partial
+
+            response_event = Event()
+            obj.executor.data['edit_val'] = None
+
+            async def compress_reply_handler(_, message, event, parent_obj):
+                parent_obj.executor.data['edit_val'] = message.text
+                await deleteMessage(message)
+                event.set()
+
+            pfunc = partial(compress_reply_handler, event=response_event, parent_obj=obj)
+            handler = obj._listener.client.add_handler(MessageHandler(pfunc, user(obj._listener.user_id) & text), group=-1)
+
+            try:
+                await wait_for(response_event.wait(), timeout=60)
+            except:
+                pass
+            finally:
+                obj._listener.client.remove_handler(*handler)
+                await deleteMessage(msg_prompt)
+
+            if obj.executor.data.get('edit_val'):
+                from bot import user_data
+                from bot.helper.ext_utils.bot_utils import update_user_ldata
+                user_id = obj._listener.user_id
+                compress_dict = user_data.get(user_id, {}).get('compress_settings', {}).copy()
+                if quality in compress_dict:
+                    compress_dict[quality][setting_key] = obj.executor.data['edit_val']
+                    await update_user_ldata(user_id, 'compress_settings', compress_dict)
+                await sendMessage(f"✅ Setting updated successfully!", obj._listener.message)
+
+            await obj._show_compress_settings(quality)
+
+        case 'compress_audio':
             await query.answer()
             obj.executor.data['audio'] = int(data[2])
             obj.event.set()

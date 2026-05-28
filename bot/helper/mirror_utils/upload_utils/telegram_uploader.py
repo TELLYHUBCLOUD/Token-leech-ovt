@@ -137,9 +137,6 @@ class TgUploader:
             async with bot_lock:
                 self._client = (bot_dict['USERBOT'] if bot_dict['IS_PREMIUM'] and await get_path_size(self._up_path) > DEFAULT_SPLIT_SIZE
                                 or bot_dict['USERBOT'] and config_dict['USERBOT_LEECH'] else bot)
-            if self._send_msg is None:
-                LOGGER.error("send_msg is None, cannot upload")
-                raise ValueError("send_msg is None")
             is_video, is_audio, is_image = await get_document_type(self._up_path)
             if not is_image and thumb is None:
                 file_name = ospath.splitext(file)[0]
@@ -357,35 +354,18 @@ class TgUploader:
     async def _msg_to_reply(self):
         if self._leech_log and self._leech_log != self._listener.message.chat.id:
             caption = f'<b>▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n{self._listener.name}\n▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬</b>'
-            try:
-                # Need to verify if the bot is actually able to send to this log chat
-                if self._thumb and await aiopath.exists(self._thumb):
-                    self._send_msg: Message = await bot.send_photo(self._leech_log, photo=self._thumb, caption=caption)
-                else:
-                    self._send_msg: Message = await bot.send_message(self._leech_log, caption, disable_web_page_preview=True)
-                if config_dict['LEECH_INFO_PIN']:
-                    await self._send_msg.pin(both_sides=True)
-            except Exception as e:
-                if "CHANNEL_INVALID" in str(e) or "PEER_ID_INVALID" in str(e):
-                    LOGGER.warning(f"Skipping _msg_to_reply for log chat {self._leech_log}: {e}")
-                    # Fallback to the original chat if log fails
-                    self._send_msg = await bot.get_messages(self._listener.message.chat.id, self._listener.mid)
-                else:
-                    raise e
+            if self._thumb and await aiopath.exists(self._thumb):
+                self._send_msg: Message = await bot.send_photo(self._leech_log, photo=self._thumb, caption=caption)
+            else:
+                self._send_msg: Message = await bot.send_message(self._leech_log, caption, disable_web_page_preview=True)
+            if config_dict['LEECH_INFO_PIN']:
+                await self._send_msg.pin(both_sides=True)
         else:
             self._send_msg: Message = await bot.get_messages(self._listener.message.chat.id, self._listener.mid)
-
-        if not self._send_msg or getattr(self._send_msg, 'chat', None) is None:
-            self._send_msg = self._listener.message
-
+            if not self._send_msg or not self._send_msg.chat:
+                self._send_msg = self._listener.message
         if self._send_msg and self._log_title and self._listener.upDest:
-            try:
-                await self._copy_Leech(self._listener.upDest, self._send_msg)
-            except Exception as e:
-                if "CHANNEL_INVALID" in str(e) or "PEER_ID_INVALID" in str(e):
-                    LOGGER.warning(f"Skipping _copy_Leech for dump chat {self._listener.upDest}: {e}")
-                else:
-                    raise e
+            await self._copy_Leech(self._listener.upDest, self._send_msg)
 
     @handle_message
     async def _send_media_group(self, msgs: list[Message], subkey: str, key: str):
@@ -467,7 +447,8 @@ class TgUploader:
                         import base64
                         from bot.helper.ext_utils.status_utils import get_readable_file_size
 
-                        file_name_title = self._send_msg.caption.split('\n')[0] if self._send_msg.caption else "Video_Stream.mkv"
+                        file_name_title = self._send_msg.caption.split('
+')[0] if self._send_msg.caption else "Video_Stream.mkv"
 
                         payload = {
                             "video_url": video_url,
@@ -480,10 +461,20 @@ class TgUploader:
                         stream_watch = f"{base_url}/watch?data={base64_data}"
                         stream_dl = f"{base_url}/download?data={base64_data}"
 
-                        new_caption = (f"<b>Stream File Successfully Processed</b>\n\n"
-                                       f"<b>Name:</b> <code>{file_name_title}</code> <b>Size:</b> {get_readable_file_size(self._size)}\n\n"
-                                       f"<b>Stream Link:</b>\n{stream_watch}\n\n"
-                                       f"<b>Download Link:</b>\n{stream_dl}\n\n"
+                        new_caption = (f"<b>Stream File Successfully Processed</b>
+
+"
+                                       f"<b>Name:</b> <code>{file_name_title}</code> <b>Size:</b> {get_readable_file_size(self._size)}
+
+"
+                                       f"<b>Stream Link:</b>
+{stream_watch}
+
+"
+                                       f"<b>Download Link:</b>
+{stream_dl}
+
+"
                                        f"‣ ᴘᴏᴡᴇʀᴇᴅ ʙʏ: Sᴇᴄʀᴇᴄᴛ 𝐁ᴏᴛ 𝐔ᴘᴅᴀᴛᴇs")
 
                         self._buttons.button_link('▶ Stream', await sync_to_async(short_url, stream_watch, self._listener.user_id), 'header')
@@ -496,7 +487,6 @@ class TgUploader:
 
                     except Exception as e:
                         LOGGER.error(f"Stream Mod Generation Error: {e}")
-
         self._send_msg = await bot.get_messages(self._send_msg.chat.id, self._send_msg.id)
         if (buttons := self._buttons.build_menu(2)) and (cmsg := await self._send_msg.edit_reply_markup(buttons)):
             self._send_msg = cmsg

@@ -93,37 +93,15 @@ async def removeSudo(_, message: Message):
     await auto_delete_message(message, msg)
 
 
-@new_task
-async def addPremiumGC(_, message: Message):
-    msg = message.text.split()
-    if len(msg) > 1:
-        id_ = int(msg[1].strip())
-    else:
-        id_ = message.chat.id
-
-    msg = 'Premium restrictions removed.'
-
-    msg = await sendMessage(msg, message)
-    await auto_delete_message(message, msg)
 
 
-@new_task
-async def rmPremiumGC(_, message: Message):
-    msg = message.text.split()
-    if len(msg) > 1:
-        id_ = int(msg[1].strip())
-    else:
-        id_ = message.chat.id
 
-    msg = 'Premium restrictions removed.'
 
-    msg = await sendMessage(msg, message)
-    await auto_delete_message(message, msg)
+
+
 
 
 bot.add_handler(MessageHandler(authorize, filters=command(BotCommands.AuthorizeCommand) & CustomFilters.sudo))
 bot.add_handler(MessageHandler(unauthorize, filters=command(BotCommands.UnAuthorizeCommand) & CustomFilters.sudo))
 bot.add_handler(MessageHandler(addSudo, filters=command(BotCommands.AddSudoCommand) & CustomFilters.owner))
 bot.add_handler(MessageHandler(removeSudo, filters=command(BotCommands.RmSudoCommand) & CustomFilters.owner))
-bot.add_handler(MessageHandler(addPremiumGC, filters=command(BotCommands.PremiumGCCommand) & CustomFilters.owner))
-bot.add_handler(MessageHandler(rmPremiumGC, filters=command(BotCommands.RmPremiumGCCommand) & CustomFilters.owner))
