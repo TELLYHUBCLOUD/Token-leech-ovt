@@ -171,7 +171,7 @@ class SelectMode():
                         buttons.button_data(f"{'✅ ' if await aiopath.exists(self.extra_data.get('subfile', '')) else ''}Sub File", 'vidtool subfile', 'header')
                     buttons.button_data('Font Style', 'vidtool fontstyle', 'header')
 
-            if self.mode in ('compress', 'watermark') or self.extra_data.get('hardsub'):
+            if self.mode in ('watermark',) or self.extra_data.get('hardsub'):
                 buttons.button_data('Quality', 'vidtool quality', 'header')
             if self.mode == 'watermark':
                 buttons.button_data('Popup', 'vidtool popupwm', 'header')
@@ -187,6 +187,14 @@ class SelectMode():
                 buttons.button_data('Done', 'vidtool done', 'footer')
 
             match mode:
+                case 'compress_menu':
+                    bnum = 2
+                    buttons.button_data('360p', 'vidtool compress_quality 360p')
+                    buttons.button_data('480p', 'vidtool compress_quality 480p')
+                    buttons.button_data('720p', 'vidtool compress_quality 720p')
+                    buttons.button_data('1080p', 'vidtool compress_quality 1080p')
+                    buttons.button_data('<<', 'vidtool back', 'footer')
+                    buttons.button_data('Done', 'vidtool done', 'footer')
                 case 'subsync':
                     buttons.button_data('Manual', 'vidtool sync_manual')
                     buttons.button_data('Auto', 'vidtool sync_auto')
@@ -242,6 +250,52 @@ class SelectMode():
                     buttons.button_data('<<', 'vidtool back', 'footer')
 
         await self._send_message(self._captions(mode), buttons.build_menu(bnum, 3))
+
+
+    async def _show_compress_settings(self, quality: str):
+        from bot import user_data
+        from bot.helper.telegram_helper.button_build import ButtonMaker
+        user_id = self.listener.user_id
+        user_dict = user_data.get(user_id, {})
+        compress_dict = user_dict.get('compress_settings', {})
+        if not compress_dict:
+            compress_dict = {
+                '360p': {'vcodec': 'libx265', 'acodec': 'aac', 'crf': '24', 'res': '640x360', 'preset': 'slow', 'audio_b': '128k', 'bits': '8 bits'},
+                '480p': {'vcodec': 'libx265', 'acodec': 'aac', 'crf': '24', 'res': '854x480', 'preset': 'slow', 'audio_b': '128k', 'bits': '8 bits'},
+                '720p': {'vcodec': 'libx265', 'acodec': 'aac', 'crf': '24', 'res': '1280x720', 'preset': 'slow', 'audio_b': '192k', 'bits': '8 bits'},
+                '1080p': {'vcodec': 'libx265', 'acodec': 'aac', 'crf': '24', 'res': '1920x1080', 'preset': 'slow', 'audio_b': '192k', 'bits': '8 bits'}
+            }
+            from bot.helper.ext_utils.bot_utils import update_user_ldata
+            await update_user_ldata(user_id, 'compress_settings', compress_dict)
+
+        settings = compress_dict.get(quality, compress_dict.get('720p', {}))
+
+        text = f"Tʜᴇ Cᴜʀʀᴇɴᴛ Sᴇᴛᴛɪɴɢꜱ ᴡɪʟʟ ʙᴇ Aᴅᴅᴇᴅ Yᴏᴜʀ Vɪᴅᴇᴏ Fɪʟᴇ ({quality}):\n"
+        text += f"Video Codec : {settings.get('vcodec', 'libx265')}\n"
+        text += f"Audio Codec : {settings.get('acodec', 'aac')}\n"
+        text += f"Crf : {settings.get('crf', '24')}\n"
+        text += f"Resolution : {settings.get('res', '1280x720')}\n"
+        text += f"Preset : {settings.get('preset', 'slow')}\n"
+        text += f"Audio Bitrate : {settings.get('audio_b', '192k')}\n"
+        text += f"Bits : {settings.get('bits', '8 bits')}\n"
+
+        buttons = ButtonMaker()
+        buttons.button_data('Edit Video Codec', f'vidtool compress_edit {quality} vcodec')
+        buttons.button_data('Edit Audio Codec', f'vidtool compress_edit {quality} acodec')
+        buttons.button_data('Edit CRF', f'vidtool compress_edit {quality} crf')
+        buttons.button_data('Edit Resolution', f'vidtool compress_edit {quality} res')
+        buttons.button_data('Edit Preset', f'vidtool compress_edit {quality} preset')
+        buttons.button_data('Edit Audio Bitrate', f'vidtool compress_edit {quality} audio_b')
+        buttons.button_data('Edit Bits', f'vidtool compress_edit {quality} bits')
+        buttons.button_data('✅ Use This Quality', f'vidtool compress_apply {quality}', 'footer')
+        buttons.button_data('🔙 Back', 'vidtool compress_back', 'footer')
+
+        try:
+            from bot.helper.telegram_helper.message_utils import editMessage
+            await editMessage(text, self._reply, buttons.build_menu(2))
+        except Exception as e:
+            from bot import LOGGER
+            LOGGER.error(f"Failed to edit message in _show_compress_settings: {e}")
 
     async def get_buttons(self):
         future = self._event_handler()
@@ -326,6 +380,59 @@ async def cb_vidtools(_, query: CallbackQuery, obj: SelectMode):
             if obj.message_event:
                 obj.message_event.set()
             await obj.list_buttons()
+        case 'compress_quality':
+            obj.extra_data['quality'] = data[2]
+            await obj._show_compress_settings(data[2])
+
+        case 'compress_back':
+            await obj.list_buttons('compress_menu')
+
+        case 'compress_apply':
+            obj.extra_data['quality'] = data[2]
+            await obj.list_buttons('compress_menu')
+
+        case 'compress_edit':
+            quality = data[2]
+            setting_key = data[3]
+            msg_prompt = await sendMessage(f"Send new value for {setting_key} ({quality}):", obj.listener.message)
+
+            from pyrogram.filters import user, text
+            from pyrogram.handlers import MessageHandler
+            from asyncio import Event as AsyncioEvent, wait_for
+            from functools import partial
+            from bot.helper.telegram_helper.message_utils import deleteMessage
+
+            response_event = AsyncioEvent()
+            obj.extra_data['edit_val'] = None
+
+            async def compress_reply_handler(_, message, event, parent_obj):
+                parent_obj.extra_data['edit_val'] = message.text
+                await deleteMessage(message)
+                event.set()
+
+            pfunc = partial(compress_reply_handler, event=response_event, parent_obj=obj)
+            handler = obj.listener.client.add_handler(MessageHandler(pfunc, user(obj.listener.user_id) & text), group=-1)
+
+            try:
+                await wait_for(response_event.wait(), timeout=60)
+            except:
+                pass
+            finally:
+                obj.listener.client.remove_handler(*handler)
+                await deleteMessage(msg_prompt)
+
+            if obj.extra_data.get('edit_val'):
+                from bot import user_data
+                from bot.helper.ext_utils.bot_utils import update_user_ldata
+                user_id = obj.listener.user_id
+                compress_dict = user_data.get(user_id, {}).get('compress_settings', {}).copy()
+                if quality in compress_dict:
+                    compress_dict[quality][setting_key] = obj.extra_data['edit_val']
+                    await update_user_ldata(user_id, 'compress_settings', compress_dict)
+                await sendMessage(f"✅ Setting updated successfully!", obj.listener.message)
+
+            await obj._show_compress_settings(quality)
+
         case 'cancel':
             obj.mode = 'Task has been cancelled!'
             obj.is_cancelled = True
@@ -364,6 +471,9 @@ async def cb_vidtools(_, query: CallbackQuery, obj: SelectMode):
         case 'stream_toggle':
             obj.extra_data['is_stream'] = bool(int(data[2]))
             await obj.list_buttons('vid_stream')
+        case 'compress':
+            obj.mode = 'compress'
+            await obj.list_buttons('compress_menu')
         case value:
             if value == 'rename':
                 obj.is_rename = True
