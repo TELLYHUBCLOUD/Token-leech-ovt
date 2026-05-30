@@ -30,6 +30,7 @@ handler_dict = {}
 
 
 async def get_user_settings(from_user, data: str, uset_data: str):
+    msg = ''
     buttons = ButtonMaker()
     user_id = from_user.id
     thumbpath = ospath.join('thumbnails', f'{user_id}.jpg')
@@ -112,6 +113,8 @@ async def get_user_settings(from_user, data: str, uset_data: str):
 
         custom_cap = ' ✓' if user_dict.get('captions') else ' ✘'
 
+
+    return msg, image, buttons
 
 async def update_user_settings(query: CallbackQuery, data: str=None, uset_data: str=None):
     text, image, button = await get_user_settings(query.from_user, data, uset_data)
@@ -369,7 +372,12 @@ async def user_settings(client, message: Message):
 
         await editMessage("✅ Custom Thumbnail saved successfully!", dl_msg)
 
-    msg, image, buttons = await get_user_settings(from_user, None, None)
+    result = await get_user_settings(from_user, None, None)
+    if result is None:
+        LOGGER.error("get_user_settings returned None for user: " + str(from_user.id))
+        await message.reply("❌ Failed to load user settings. Please try again.")
+        return
+    msg, image, buttons = result
     if await aiopath.exists(thumb := ospath.join('thumbnails', f'{message.from_user.id}.jpg')):
         image = thumb
     await sendPhoto(msg, message, image or config_dict['IMAGE_USETIINGS'], buttons)
