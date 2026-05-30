@@ -114,7 +114,7 @@ async def get_user_settings(from_user, data: str, uset_data: str):
         custom_cap = ' ✓' if user_dict.get('captions') else ' ✘'
 
 
-    return msg, image, buttons
+    return msg, image, buttons.build_menu(2) if hasattr(buttons, 'build_menu') else buttons
 
 async def update_user_settings(query: CallbackQuery, data: str=None, uset_data: str=None):
     text, image, button = await get_user_settings(query.from_user, data, uset_data)

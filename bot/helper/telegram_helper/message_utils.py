@@ -114,16 +114,28 @@ async def copyMessage(chat_id: int, message: Message, reply_markup: InlineKeyboa
 
 @handle_message
 async def sendPhoto(caption: str, message: Message, photo, reply_markup: InlineKeyboardMarkup=None):
+    if hasattr(reply_markup, 'build_menu'):
+        reply_markup = reply_markup.build_menu(2)
+    elif hasattr(reply_markup, 'button'):
+        reply_markup = reply_markup.button
     return await message.reply_photo(photo, True, limit.caption(caption), reply_markup=reply_markup, disable_notification=True)
 
 
 @handle_message
 async def editPhoto(caption: str, message: Message, photo, reply_markup: InlineKeyboardMarkup=None):
+    if hasattr(reply_markup, 'build_menu'):
+        reply_markup = reply_markup.build_menu(2)
+    elif hasattr(reply_markup, 'button'):
+        reply_markup = reply_markup.button
     return await message.edit_media(InputMediaPhoto(photo, limit.caption(caption)), reply_markup)
 
 
 @handle_message
 async def editMarkup(message: Message, reply_markup: InlineKeyboardMarkup=None):
+    if hasattr(reply_markup, 'build_menu'):
+        reply_markup = reply_markup.build_menu(2)
+    elif hasattr(reply_markup, 'button'):
+        reply_markup = reply_markup.button
     return await message.edit_reply_markup(reply_markup)
 
 
